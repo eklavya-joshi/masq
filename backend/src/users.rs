@@ -1,14 +1,20 @@
-use bson::Document;
-use mongodb::{Collection, Database};
+use crate::schema;
+use crate::models::*;
+use diesel::prelude::*;
+use diesel::r2d2::ConnectionManager;
+use diesel::r2d2::Pool;
 
-use crate::database::{getUserCollection};
+pub fn get_user_pass(pg: &mut PgConnection, user_name: String) -> String {
+    use schema::users::dsl::*;
 
-pub async fn getUserInfo(database: Database, user: String) -> String {
-    let users: Collection<Document> = getUserCollection(database).await;
+    // let mut pg = pool.get().unwrap();
 
-    let user: Document = users.find_one(doc! {"firstName": user}, None).await.ok().unwrap().unwrap();
+    let user = users
+        .filter(name.eq(user_name))
+        .limit(1)
+        .select(User::as_select())
+        .load(pg)
+        .expect("No user found");
 
-    // println!("{:?}", user);
-
-    return user.get("firstName").unwrap().to_string() + " " + &user.get("lastName").unwrap().to_string();
+    return user[0].name.clone() + &user[0].pass.clone()
 }
