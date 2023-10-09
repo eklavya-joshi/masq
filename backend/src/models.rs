@@ -1,4 +1,5 @@
 use chrono::{NaiveDateTime};
+use uuid::{Uuid};
 
 use diesel::prelude::*;
 
@@ -6,7 +7,7 @@ use diesel::prelude::*;
 #[diesel(table_name = crate::schema::users)]
 #[diesel(check_for_backend(diesel::pg::Pg))]
 pub struct User {
-    pub id: i32,
+    pub id: Uuid,
     pub name: String,
     pub salt: Option<String>,
     pub pass: String,

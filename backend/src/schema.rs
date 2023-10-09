@@ -12,7 +12,7 @@ diesel::table! {
 
 diesel::table! {
     users (id) {
-        id -> Int4,
+        id -> Uuid,
         #[max_length = 50]
         name -> Varchar,
         #[max_length = 50]
