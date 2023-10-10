@@ -14,7 +14,7 @@ serde = {version = "1.0.188", features = ["derive"]}
 dotenvy = "0.15.0"
 chrono = "0.4.31"
 uuid = {version = "1.4.1", features = ["v4"]}
-ring = "0.17.2"
 hex = "0.4.3"
 bcrypt = "0.15.0"
 rand = "0.8.5"
+crypto_box = "0.9.1"

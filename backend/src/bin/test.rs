@@ -1,32 +1,26 @@
-use ring::error::Unspecified;
-use ring::rand::SystemRandom;
-use ring::agreement;
-use ring::agreement::Algorithm;
-use ring::agreement::X25519;
-use ring::agreement::EphemeralPrivateKey;
-use ring::agreement::PublicKey;
-use ring::agreement::UnparsedPublicKey;
+use crypto_box::{
+    aead::{Aead, AeadCore, OsRng},
+    SalsaBox, PublicKey, SecretKey
+};
 
-fn main() -> Result<(), Unspecified> {
-    // Derived a shared secret using ECDH
+fn main() {
+    let a_private_key = SecretKey::generate(&mut OsRng);
+    let a_public_key = a_private_key.public_key();
 
-    let rng = SystemRandom::new();
-    let alg: &Algorithm = &X25519;
-    let my_private_key: EphemeralPrivateKey = EphemeralPrivateKey::generate(alg, &rng)?;
-    let _my_public_key: PublicKey = my_private_key.compute_public_key()?;
+    let b_private_key = SecretKey::generate(&mut OsRng);
+    let b_public_key = b_private_key.public_key();
 
-    // Send our public key to the peer here
-    let peer_public_key: PublicKey = { // Simulate receiving a public key from the peer
-        let peer_private_key = EphemeralPrivateKey::generate(alg, &rng)?;
-        peer_private_key.compute_public_key()?
-    };
+    let a_box = SalsaBox::new(&b_public_key, &a_private_key);
 
-    let peer_public_key = UnparsedPublicKey::new(alg, peer_public_key);
-    let str = agreement::agree_ephemeral(my_private_key,
-                    &peer_public_key,
-                    |_shared_secret: &[u8]| {
-                        "i love butts"
-                    }).unwrap();
-    println!("{}", str);
-    Ok(())
+    let nonce = SalsaBox::generate_nonce(&mut OsRng);
+
+    let plaintext = b"I love poop";
+
+    let ciphertext = a_box.encrypt(&nonce, &plaintext[..]).unwrap();
+
+    let b_box = SalsaBox::new(&a_public_key, &b_private_key);
+
+    let decrypted_plaintext = b_box.decrypt(&nonce, &ciphertext[..]).unwrap();
+
+    println!("{}", String::from_utf8(decrypted_plaintext).unwrap());
 }
