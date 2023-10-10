@@ -1,7 +1,7 @@
 use std::io::stdin;
 use backend::{
     database::database::establish_connection,
-    api::user::login
+    api::user::verify_user
 };
 
 fn main() {
@@ -18,6 +18,6 @@ fn main() {
     stdin().read_line(&mut password).unwrap();
     let password = password.trim_end().to_string();
 
-    login(connection, username, password);
+    verify_user(connection, username, password);
 
 }
