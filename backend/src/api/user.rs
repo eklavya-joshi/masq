@@ -20,18 +20,18 @@ pub fn create_user(conn: &mut PgConnection, name_input: String, pass_input: Stri
     let mut salt_gen = [0u8; CREDENTIAL_LEN];
     rng.fill(&mut salt_gen).ok();
 
-    let mut pbkdf2_hash = [0u8; CREDENTIAL_LEN];
+    let mut hash_gen = [0u8; CREDENTIAL_LEN];
     pbkdf2::derive(
         pbkdf2::PBKDF2_HMAC_SHA512,
         n_iter,
         &salt_gen,
         pass_input.as_bytes(),
-        &mut pbkdf2_hash,
+        &mut hash_gen,
     );
 
 
     let salt_hex = hex::encode(&salt_gen);
-    let hash_hex = hex::encode(&pbkdf2_hash);
+    let hash_hex = hex::encode(&hash_gen);
 
     let new_user = User 
     { 
