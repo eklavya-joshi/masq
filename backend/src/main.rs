@@ -1,69 +1,49 @@
-// #[macro_use(bson, doc)]
-// extern crate bson;
-// extern crate mongodb;
-// use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
+use std::sync::Arc;
 
-// #[get("/")]
-// async fn hello() -> impl Responder {
-//     HttpResponse::Ok().body("Hello world!")
-// }
+use axum::{Router, routing::get, extract::{State, Query}, response::{IntoResponse, Html}};
+use diesel::{PgConnection, r2d2::{ConnectionManager, Pool}};
+use serde::Deserialize;
 
-// #[post("/echo")]
-// async fn echo(req_body: String) -> impl Responder {
-//     HttpResponse::Ok().body(req_body)
-// }
+pub mod api;
+pub mod database;
+pub mod schema;
+pub mod models;
 
-// async fn manual_hello() -> impl Responder {
-//     HttpResponse::Ok().body("Hey there!")
-// }
+use database::{
+  database::get_connection_pool,
+};
+use api::{
+  user::get_users
+};
 
-// #[actix_web::main]
-// async fn main() -> std::io::Result<()> {
-//     HttpServer::new(|| {
-//         App::new()
-//             .service(hello)
-//             .service(echo)
-//             .route("/hey", web::get().to(manual_hello))
-//     })
-//     .bind(("127.0.0.1", 8080))?
-//     .run()
-//     .await
-// }
+#[derive(Clone)]
+struct AppState {
+  pool: Pool<ConnectionManager<PgConnection>>,
+}
 
-
-use bson::Document;
-use mongodb::{bson::doc, options::{ClientOptions, ServerApi, ServerApiVersion}, Client, Database, Collection};
-use dotenv;
+#[derive(Deserialize)]
+struct GetUsers {
+  name: String,
+  n: u32
+}
 
 #[tokio::main]
-async fn main() -> mongodb::error::Result<()> {
+async fn main() {
 
-  dotenv::dotenv().ok();
+  let app_state = Arc::new(AppState {pool: get_connection_pool()});
 
-  let mut client_options =
-    ClientOptions::parse(dotenv::var("DB_URL").unwrap()).await.ok().unwrap();
+  let app = Router::new()
+  .route("/", get(|| async { "Hello, World!" }))
+  .route("/user", get(get_user))
+  .with_state(app_state);
 
-  // Set the server_api field of the client_options object to Stable API version 1
-  let server_api = ServerApi::builder().version(ServerApiVersion::V1).build();
-  client_options.server_api = Some(server_api);
+  // run it with hyper on localhost:3000
+  axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
+      .serve(app.into_make_service())
+      .await
+      .unwrap();
+}
 
-  // Get a handle to the cluster
-  let client = Client::with_options(client_options)?;
-
-  let db: Database = client.database("masq");
-  // Ping the server to see if you can connect to the cluster
-  db
-    .run_command(doc! {"ping": 1}, None)
-    .await?;
-  println!("Pinged your deployment. You successfully connected to MongoDB!");
-
-  let users: Collection<Document> = db.collection("users");
-  
-  let mut userCursor = users.find(None, None).await.ok().unwrap();
-
-  while userCursor.advance().await? {
-    println!("{:?}, {:?}", userCursor.current().get("firstName"), userCursor.current().get("lastName"));
-  }
-
-  Ok(())
+async fn get_user(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>) -> impl IntoResponse {
+  Html(get_users(&mut state.pool.get().unwrap(), params.name, params.n))
 }
