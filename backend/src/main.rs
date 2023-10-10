@@ -1,13 +1,20 @@
+use std::sync::Arc;
+
 use axum::{Router, routing::get, extract::{State, Query}, response::{IntoResponse, Html}};
-use database::{get_connection_pool};
 use diesel::{PgConnection, r2d2::{ConnectionManager, Pool}};
 use serde::Deserialize;
 
-use crate::users::get_user_pass;
+pub mod api;
 pub mod database;
-pub mod users;
 pub mod schema;
 pub mod models;
+
+use database::{
+  database::get_connection_pool,
+};
+use api::{
+  user::get_users
+};
 
 #[derive(Clone)]
 struct AppState {
@@ -15,14 +22,15 @@ struct AppState {
 }
 
 #[derive(Deserialize)]
-struct TestParams {
-  name: String
+struct GetUsers {
+  name: String,
+  n: u32
 }
 
 #[tokio::main]
 async fn main() {
 
-  let app_state = AppState {pool: get_connection_pool()};
+  let app_state = Arc::new(AppState {pool: get_connection_pool()});
 
   let app = Router::new()
   .route("/", get(|| async { "Hello, World!" }))
@@ -36,6 +44,6 @@ async fn main() {
       .unwrap();
 }
 
-async fn get_user(State(state): State<AppState>, Query(params): Query<TestParams>) -> impl IntoResponse {
-  Html(get_user_pass(&mut state.pool.get().unwrap(), params.name))
+async fn get_user(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>) -> impl IntoResponse {
+  Html(get_users(&mut state.pool.get().unwrap(), params.name, params.n))
 }

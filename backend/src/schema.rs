@@ -15,9 +15,9 @@ diesel::table! {
         id -> Uuid,
         #[max_length = 50]
         name -> Varchar,
-        #[max_length = 50]
+        #[max_length = 150]
         salt -> Nullable<Varchar>,
-        #[max_length = 100]
+        #[max_length = 150]
         pass -> Varchar,
         created -> Timestamp,
         active -> Bool,
