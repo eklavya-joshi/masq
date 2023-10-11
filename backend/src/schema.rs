@@ -33,6 +33,7 @@ diesel::table! {
         id -> Uuid,
         #[max_length = 50]
         name -> Varchar,
+        tag -> Int2,
         #[max_length = 150]
         salt -> Nullable<Varchar>,
         #[max_length = 150]

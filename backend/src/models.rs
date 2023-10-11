@@ -9,6 +9,7 @@ use diesel::prelude::*;
 pub struct User {
     pub id: Uuid,
     pub name: String,
+    pub tag: i16,
     pub salt: Option<String>,
     pub pass: String,
     pub created: NaiveDateTime,

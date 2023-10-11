@@ -12,6 +12,7 @@ use crate::{models::User, schema};
 #[derive(Debug)]
 pub struct UserInfo {
     pub name: String,
+    pub tag: i16,
     pub created: NaiveDateTime
 }
 
@@ -20,13 +21,24 @@ pub fn create_user(conn: &mut PgConnection, name_input: String, pass_input: Stri
 
     let user_id: Uuid = Uuid::new_v4();
 
+    let existing_usernames: i64 = users
+        .filter(name.eq(&name_input))
+        .count()
+        .get_result(conn)
+        .expect("Couldn't reach database");
+
+    if existing_usernames >= 9998 {
+        todo!();
+    }
+
     let user_salt = rand::thread_rng().gen::<[u8; 16]>();
     let pass_hash = hash_with_salt(pass_input, bcrypt::DEFAULT_COST, user_salt).unwrap().to_string();
 
     let new_user = User 
     { 
         id: user_id, 
-        name: name_input.to_owned(), 
+        name: name_input.to_owned(),
+        tag: (existing_usernames + 1).try_into().unwrap(),
         salt: Some(hex::encode(user_salt)), 
         pass: pass_hash, 
         created: Utc::now().naive_local(), 
@@ -56,7 +68,7 @@ pub fn get_users(pg: &mut PgConnection, user_name: String, n: u32) -> Vec<UserIn
 
     let mut userList: Vec<UserInfo> = vec![];
     for user in vec {
-        userList.push(UserInfo {name: user.name.clone(), created: user.created.clone()});
+        userList.push(UserInfo {name: user.name.clone(), tag: user.tag.clone(), created: user.created.clone()});
     }
 
     userList

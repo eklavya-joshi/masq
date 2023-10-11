@@ -35,7 +35,7 @@ async fn find(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>
     let user_list = get_users(&mut state.pool.get().unwrap(), params.name, params.n);
     let mut str = String::new();
     for u in user_list {
-        str.push_str(&format!("name: {}\ncreated: {}\n", u.name, u.created.format("%Y-%m-%d %H:%M:%S")));
+        str.push_str(&format!("name: {}\ntag: {}\ncreated: {}\n", u.name, u.tag, u.created.format("%Y-%m-%d %H:%M:%S")));
     }
     Html(str)
 }
