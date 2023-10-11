@@ -40,7 +40,7 @@ async fn main() {
 
   let app = Router::new()
     .route("/", get(|| async { "Hello, World!" }))
-    .merge(users_router(app_state).await);
+    .nest("/users", users_router(app_state));
   
 
   // run it with hyper on localhost:3000

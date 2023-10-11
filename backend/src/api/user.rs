@@ -16,6 +16,10 @@ pub struct UserInfo {
     pub created: NaiveDateTime
 }
 
+pub fn show_user(name: String, tag: i16) -> String {
+    format!("{name}#{:04}", tag)
+}
+
 pub fn create_user(conn: &mut PgConnection, name_input: String, pass_input: String) -> User {
     use schema::users::dsl::*;
 
@@ -82,19 +86,19 @@ pub fn remove_user(pg: &mut PgConnection, user_id: String) -> Result<usize, Erro
         .execute(pg)
 }
 
-pub fn verify_user(pg: &mut PgConnection, user_name: String, user_pass: String) {
+pub fn verify_user(pg: &mut PgConnection, user_name: String, user_tag: i16, user_pass: String) -> bool {
     use schema::users::dsl::*;
 
     let vec = users
-        .filter(name.eq(&user_name))
+        .filter(name.eq(&user_name).and(tag.eq(user_tag)))
         .limit(1)
         .select(User::as_select())
         .load(pg)
-        .expect("Error finding users");
+        .expect("Error finding user");
 
     if vec.len() == 0 {
         println!("No users with this username found");
-        return;
+        return false;
     }
 
     let user_salt: [u8 ; 16] = hex::decode(&vec[0].salt.clone().unwrap().clone()).unwrap().try_into().unwrap();
@@ -102,11 +106,6 @@ pub fn verify_user(pg: &mut PgConnection, user_name: String, user_pass: String) 
 
     let new_hash = hash_with_salt(user_pass, bcrypt::DEFAULT_COST, user_salt).unwrap().to_string();
 
-    if new_hash.eq(target_hash) {
-        println!("Correct password");
-        return;
-    }
-
-    println!("Incorrect password");
+    new_hash.eq(target_hash)
 
 }
