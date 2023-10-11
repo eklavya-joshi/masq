@@ -3,7 +3,7 @@ use chrono::Utc;
 use rand::Rng;
 use uuid::Uuid;
 use diesel::result::Error;
-use bcrypt::{hash, hash_with_salt};
+use bcrypt::hash_with_salt;
 use diesel::{PgConnection, SelectableHelper, RunQueryDsl};
 use diesel::prelude::*;
 
