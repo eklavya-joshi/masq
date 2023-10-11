@@ -1,9 +1,11 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::get, extract::{State, Query}, response::{IntoResponse, Html}};
+use axum::{Router, routing::{get, post}, extract::{State, Query}, response::{IntoResponse, Html}, Json};
 use diesel::{PgConnection, r2d2::{ConnectionManager, Pool}};
 use serde::Deserialize;
+use serde_json::{Value, json};
 
+pub mod error;
 pub mod api;
 pub mod database;
 pub mod schema;
@@ -16,7 +18,7 @@ use crate::{
   },
   web::{
     state::AppState,
-    user::user_router
+    users::users_router
   }
 };
 
@@ -26,6 +28,11 @@ struct GetUsers {
   n: u32
 }
 
+struct TestPayload {
+    username: String,
+    password: String,
+}
+
 #[tokio::main]
 async fn main() {
 
@@ -33,7 +40,7 @@ async fn main() {
 
   let app = Router::new()
     .route("/", get(|| async { "Hello, World!" }))
-    .merge(user_router(app_state).await);
+    .merge(users_router(app_state).await);
   
 
   // run it with hyper on localhost:3000
