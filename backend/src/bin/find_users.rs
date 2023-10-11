@@ -22,5 +22,5 @@ fn main() {
         .ok()
         .unwrap();
 
-    println!("{}", get_users(connection, name, n));
+    // println!("{}", get_users(connection, name, n));
 }

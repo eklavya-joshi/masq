@@ -8,18 +8,17 @@ pub mod api;
 pub mod database;
 pub mod schema;
 pub mod models;
+pub mod web;
 
-use database::{
-  database::get_connection_pool,
+use crate::{
+  database::{
+    database::get_connection_pool,
+  },
+  web::{
+    state::AppState,
+    user::user_router
+  }
 };
-use api::{
-  user::get_users
-};
-
-#[derive(Clone)]
-struct AppState {
-  pool: Pool<ConnectionManager<PgConnection>>,
-}
 
 #[derive(Deserialize)]
 struct GetUsers {
@@ -33,17 +32,13 @@ async fn main() {
   let app_state = Arc::new(AppState {pool: get_connection_pool()});
 
   let app = Router::new()
-  .route("/", get(|| async { "Hello, World!" }))
-  .route("/user", get(get_user))
-  .with_state(app_state);
+    .route("/", get(|| async { "Hello, World!" }))
+    .merge(user_router(app_state).await);
+  
 
   // run it with hyper on localhost:3000
   axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
       .serve(app.into_make_service())
       .await
       .unwrap();
-}
-
-async fn get_user(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>) -> impl IntoResponse {
-  Html(get_users(&mut state.pool.get().unwrap(), params.name, params.n))
 }

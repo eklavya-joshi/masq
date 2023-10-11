@@ -1,5 +1,5 @@
 use std::cmp::min;
-use chrono::Utc;
+use chrono::{Utc, NaiveDateTime};
 use rand::Rng;
 use uuid::Uuid;
 use diesel::result::Error;
@@ -8,6 +8,12 @@ use diesel::{PgConnection, SelectableHelper, RunQueryDsl};
 use diesel::prelude::*;
 
 use crate::{models::User, schema};
+
+#[derive(Debug)]
+pub struct UserInfo {
+    pub name: String,
+    pub created: NaiveDateTime
+}
 
 pub fn create_user(conn: &mut PgConnection, name_input: String, pass_input: String) -> User {
     use schema::users::dsl::*;
@@ -34,7 +40,7 @@ pub fn create_user(conn: &mut PgConnection, name_input: String, pass_input: Stri
         .expect("Couldn't insert user")
 }
 
-pub fn get_users(pg: &mut PgConnection, user_name: String, n: u32) -> String {
+pub fn get_users(pg: &mut PgConnection, user_name: String, n: u32) -> Vec<UserInfo> {
     use schema::users::dsl::*;
 
     let vec = users
@@ -45,14 +51,15 @@ pub fn get_users(pg: &mut PgConnection, user_name: String, n: u32) -> String {
         .expect("Error finding users");
 
     if vec.len() == 0 {
-        return "No users found".to_owned();
+        return vec![];
     }
 
-    let mut str = String::new();
+    let mut userList: Vec<UserInfo> = vec![];
     for user in vec {
-        str.push_str(&format!("user: {}\npass: {}\nid: {}\n", user.name.clone(), user.pass.clone(), user.id.clone())) 
+        userList.push(UserInfo {name: user.name.clone(), created: user.created.clone()});
     }
-    str
+
+    userList
 }
 
 pub fn remove_user(pg: &mut PgConnection, user_id: String) -> Result<usize, Error> {
