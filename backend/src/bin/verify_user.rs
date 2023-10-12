@@ -1,6 +1,6 @@
 use std::io::stdin;
 use backend::{
-    database::database::establish_connection,
+    database::establish_connection,
     api::user::verify_user
 };
 

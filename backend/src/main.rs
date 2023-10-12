@@ -2,13 +2,12 @@ use std::sync::Arc;
 
 use axum::{Router, routing::get};
 
-pub mod error;
 pub mod api;
 pub mod database;
 pub mod web;
 
 use crate::{
-  database::database::get_connection_pool,
+  database::get_connection_pool,
   web::{
     AppState,
     users::users_router

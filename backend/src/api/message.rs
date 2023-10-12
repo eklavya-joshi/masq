@@ -65,7 +65,7 @@ pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uu
     };
 
     query!(
-        r#"INSERT INTO Message_Recipients(id, message_id, recipient, recipient_group)
+        r#"INSERT INTO MessageRecipients(id, message_id, recipient, recipient_group)
         VALUES ($1, $2, $3, $4)"#,
         new_recipient.id,
         new_recipient.message_id,
