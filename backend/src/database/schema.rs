@@ -2,8 +2,6 @@ use chrono::NaiveDateTime;
 use serde::Serialize;
 use uuid::Uuid;
 
-// use diesel::prelude::*;
-
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {

@@ -7,8 +7,6 @@ use serde_json::{Value, json};
 pub mod error;
 pub mod api;
 pub mod database;
-pub mod schema;
-pub mod models;
 pub mod web;
 
 use crate::{

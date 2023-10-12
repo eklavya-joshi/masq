@@ -5,7 +5,7 @@ use sqlx::{PgConnection, query};
 use uuid::Uuid;
 use bcrypt::hash_with_salt;
 
-use crate::{models::User, schema};
+use crate::database::schema::User;
 
 #[derive(Debug)]
 pub struct UserInfo {

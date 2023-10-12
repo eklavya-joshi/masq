@@ -2,9 +2,7 @@ use chrono::Utc;
 use sqlx::{PgConnection, query, Error};
 use uuid::Uuid;
 
-use crate::{
-    models::{Message, MessageRecipient}, 
-};
+use crate::database::schema::{Message, MessageRecipient};
 
 pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid, Error> {
 
