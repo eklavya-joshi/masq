@@ -5,7 +5,10 @@ use sqlx::{PgConnection, query};
 use uuid::Uuid;
 use bcrypt::hash_with_salt;
 
-use crate::database::schema::User;
+use crate::{
+    database::schema::User,
+    api::error::{Error, Result},
+};
 
 #[derive(Debug)]
 pub struct UserInfo {
@@ -18,7 +21,7 @@ pub fn show_user(name: String, tag: i16) -> String {
     format!("{name}#{:04}", tag)
 }
 
-pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input: String) -> User {
+pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input: String) -> Result<User> {
 
     let user_id: Uuid = Uuid::new_v4();
 
@@ -27,11 +30,10 @@ pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input
         name_input
     )
     .fetch_one(conn.as_mut())
-    .await
-    .unwrap();
+    .await?;
 
     if existing_usernames.count.unwrap() >= 9998 {
-        todo!();
+        return Err(Error::UsernameNotAvailable);
     }
 
     let user_salt = rand::thread_rng().gen::<[u8; 16]>();
@@ -59,64 +61,60 @@ pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input
         new_user.created
     )
     .execute(conn)
-    .await.ok();
+    .await?;
 
-    return new_user;
+    return Ok(new_user);
 
 }
 
-pub async fn get_users(conn: &mut PgConnection, user_name: String, n: u32) -> Vec<UserInfo> {
+pub async fn get_users(conn: &mut PgConnection, user_name: String, n: u32) -> Result<Vec<UserInfo>> {
 
     let existing_usernames = query!(
         r#"SELECT name, tag, created FROM Users WHERE name iLIKE $1"#,
         format!("%{user_name}%")
     )
     .fetch_all(conn.as_mut())
-    .await
-    .unwrap();
+    .await?;
 
     if existing_usernames.len() == 0 {
-        return vec![];
+        return Ok(vec![]);
     }
 
     let mut user_list: Vec<UserInfo> = vec![];
     for user in existing_usernames {
-        user_list.push(UserInfo {name: user.name.clone(), tag: user.tag.clone(), created: user.created.clone()});
+        user_list.push(UserInfo {name: user.name, tag: user.tag, created: user.created});
     }
 
-    user_list
+    Ok(user_list)
 }
 
-pub async fn remove_user(conn: &mut PgConnection, user_id: String) {
+pub async fn remove_user(conn: &mut PgConnection, user_id: String) -> Result<bool> {
     query!(
         r#"DELETE FROM Users WHERE id=$1"#,
         Uuid::parse_str(&user_id).ok().unwrap()
     )
     .execute(conn)
-    .await.ok();
+    .await
+    .and_then(|_| Ok(true))
+    .map_err(|e| e.into())
 }
 
-pub async fn verify_user(conn: &mut PgConnection, user_name: String, user_tag: i16, user_pass: String) -> bool {
+pub async fn verify_user(conn: &mut PgConnection, user_name: String, user_tag: i16, user_pass: String) -> Result<bool> {
 
-    match query!(
+    let user = query!(
         r#"SELECT * FROM Users WHERE name=$1 AND tag=$2"#,
         user_name,
         user_tag
     )
     .fetch_one(conn.as_mut())
-    .await {
-        Ok(user) => {
-            let user_salt: [u8 ; 16] = hex::decode(&user.salt.unwrap()).unwrap().try_into().unwrap();
+    .await
+    .or(Err(Error::UserNotFound))?;
+
+    let user_salt: [u8 ; 16] = hex::decode(&user.salt.unwrap()).unwrap().try_into().unwrap();
             let target_hash = user.pass;
 
             let new_hash = hash_with_salt(user_pass, bcrypt::DEFAULT_COST, user_salt).unwrap().to_string();
 
-            return new_hash.eq(&target_hash);
-        },
-        Err(_) => {
-            println!("No users with this username found");
-            return false;
-        },
-    };
+            return Ok(new_hash.eq(&target_hash));
 
 }

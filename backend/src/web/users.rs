@@ -43,7 +43,7 @@ pub async fn users_router(app_state: Arc<AppState>) -> Router {
 
 #[debug_handler]
 async fn find(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>) -> impl IntoResponse {
-    let user_list = get_users(&mut state.pool.acquire().await.unwrap(), params.name, params.n).await;
+    let user_list = get_users(&mut state.pool.acquire().await.unwrap(), params.name, params.n).await.unwrap();
     let mut str = String::new();
     for u in user_list {
         str.push_str(&format!("username: {}\ncreated: {}\n", show_user(u.name, u.tag), u.created.format("%Y-%m-%d %H:%M:%S")));
@@ -52,7 +52,7 @@ async fn find(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>
 }
 
 async fn create(State(state): State<Arc<AppState>>, Json(payload): Json<CreatePayload>) -> Json<Value> {
-    let u = create_user(&mut state.pool.acquire().await.unwrap(), payload.username.clone(), payload.password.clone()).await;
+    let u = create_user(&mut state.pool.acquire().await.unwrap(), payload.username.clone(), payload.password.clone()).await.unwrap();
 
     let created = u.created.clone().format("%Y-%m-%d %H:%M:%S").to_string();
 
@@ -71,7 +71,8 @@ async fn login(State(state): State<Arc<AppState>>, Json(payload): Json<LoginPayl
         payload.username.clone(), 
         payload.tag, 
         payload.password.clone())
-        .await;
+        .await
+        .unwrap();
 
     let body = Json(json!({
 		"result": {

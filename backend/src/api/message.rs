@@ -1,16 +1,20 @@
 use chrono::Utc;
-use sqlx::{PgConnection, query, Error};
+use sqlx::{PgConnection, query};
 use uuid::Uuid;
 
-use crate::database::schema::{Message, MessageRecipient};
+use crate::{
+    database::schema::{Message, MessageRecipient}, 
+    api::error::{Error, Result},
+};
 
-pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid, Error> {
+pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid> {
 
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#, 
         author_id)
         .fetch_one(conn.as_mut())
-        .await?;
+        .await
+        .or(Err(Error::UserNotFound))?;
 
     let msg_id = Uuid::new_v4();
 
@@ -35,19 +39,21 @@ pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_st
     return Ok(msg_id);
 }
 
-pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) -> Result<Uuid, Error> {
+pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) -> Result<Uuid> {
 
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#, 
         receiver_id)
         .fetch_one(conn.as_mut())
-        .await?;
+        .await
+        .or(Err(Error::UserNotFound))?;
 
     query!(
         r#"SELECT * FROM Messages WHERE id=$1"#, 
         msg_id)
         .fetch_one(conn.as_mut())
-        .await?;
+        .await
+        .or(Err(Error::MessageNotFound))?;
     
     println!("Sending message");
 
