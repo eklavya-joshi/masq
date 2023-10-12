@@ -22,12 +22,6 @@ pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input
 
     let user_id: Uuid = Uuid::new_v4();
 
-    // let existing_usernames: i64 = users
-    //     .filter(name.eq(&name_input))
-    //     .count()
-    //     .get_result(conn)
-    //     .expect("Couldn't reach database");
-
     let existing_usernames = query!(
         r#"SELECT COUNT(*) FROM Users WHERE name=$1"#,
         name_input
@@ -54,12 +48,6 @@ pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input
         active: true  
     };
 
-    // diesel::insert_into(users)
-    //     .values(&new_user)
-    //     .returning(User::as_returning())
-    //     .get_result(conn)
-    //     .expect("Couldn't insert user")
-
     query!(
         r#"INSERT INTO Users(id, name, tag, salt, pass, created)
         VALUES ($1, $2, $3, $4, $5, $6)"#,
@@ -71,20 +59,13 @@ pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input
         new_user.created
     )
     .execute(conn)
-    .await;
+    .await.ok();
 
     return new_user;
 
 }
 
 pub async fn get_users(conn: &mut PgConnection, user_name: String, n: u32) -> Vec<UserInfo> {
-
-    // let vec = users
-    //     .filter(name.ilike(format!("%{user_name}%")))
-    //     .limit(min(n.into(), 25))
-    //     .select(User::as_select())
-    //     .load(conn)
-    //     .expect("Error finding users");
 
     let existing_usernames = query!(
         r#"SELECT name, tag, created FROM Users WHERE name iLIKE $1"#,
@@ -107,27 +88,15 @@ pub async fn get_users(conn: &mut PgConnection, user_name: String, n: u32) -> Ve
 }
 
 pub async fn remove_user(conn: &mut PgConnection, user_id: String) {
-    
-    // diesel::delete(users
-    //     .find(Uuid::parse_str(&user_id).ok().unwrap()))
-    //     .execute(conn)
-
     query!(
         r#"DELETE FROM Users WHERE id=$1"#,
         Uuid::parse_str(&user_id).ok().unwrap()
     )
     .execute(conn)
-    .await;
+    .await.ok();
 }
 
 pub async fn verify_user(conn: &mut PgConnection, user_name: String, user_tag: i16, user_pass: String) -> bool {
-
-    // let vec = users
-    //     .filter(name.eq(&user_name).and(tag.eq(user_tag)))
-    //     .limit(1)
-    //     .select(User::as_select())
-    //     .load(conn)
-    //     .expect("Error finding user");
 
     match query!(
         r#"SELECT * FROM Users WHERE name=$1 AND tag=$2"#,

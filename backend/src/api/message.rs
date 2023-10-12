@@ -8,17 +8,6 @@ use crate::{
 
 pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid, Error> {
 
-    // match users
-    //     .find(author_id)
-    //     .select(User::as_select())
-    //     .load(conn) {
-    //         Ok(_) => {},
-    //         Err(e) => {
-    //             println!("Error: {:?}", e);
-    //             e;
-    //         },
-    //     };
-
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#, 
         author_id)
@@ -33,12 +22,6 @@ pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_st
         content: content_str,
         created: Utc::now().naive_local(),
     };
-
-    // diesel::insert_into(messages)
-    //     .values(&new_message)
-    //     .returning(Message::as_returning())
-    //     .get_result(conn)
-    //     .expect("Couldn't create message");
 
     query!(
         r#"INSERT INTO Messages(id, author, content, created)
@@ -56,33 +39,11 @@ pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_st
 
 pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) -> Result<Uuid, Error> {
 
-    // match users
-    //     .find(receiver_id)
-    //     .select(User::as_select())
-    //     .load(conn) {
-    //         Ok(_) => {},
-    //         Err(e) => {
-    //             println!("Error: {:?}", e);
-    //             return;
-    //         },
-    //     };
-
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#, 
         receiver_id)
         .fetch_one(conn.as_mut())
         .await?;
-
-    // let msg = match messages
-    //     .find(msg_id)
-    //     .select(Message::as_select())
-    //     .load(conn) {
-    //         Ok(msg) => msg,
-    //         Err(e) => {
-    //             println!("Error: {:?}", e);
-    //             return;
-    //         },
-    //     };
 
     query!(
         r#"SELECT * FROM Messages WHERE id=$1"#, 
@@ -98,12 +59,6 @@ pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uu
         recipient: Some(receiver_id),
         recipient_group: None,
     };
-
-    // diesel::insert_into(message_recipients)
-    //     .values(&new_recipient)
-    //     .returning(MessageRecipient::as_returning())
-    //     .get_result(conn)
-    //     .expect("Couldn't send message");
 
     query!(
         r#"INSERT INTO Message_Recipients(id, message_id, recipient, recipient_group)
