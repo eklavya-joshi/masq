@@ -7,10 +7,10 @@ use backend::{
 use uuid::Uuid;
 
 
-
-fn main() {
+#[tokio::main]
+async fn main() {
     
-    let connection = &mut establish_connection();
+    let connection = &mut establish_connection().await;
 
     let mut content = String::new();
     let mut sender_id = String::new();
@@ -27,6 +27,6 @@ fn main() {
     stdin().read_line(&mut receiver_id).unwrap();
     let receiver_id = receiver_id.trim_end().to_string();
 
-    let message_id = create_message(connection, Uuid::parse_str(&sender_id).ok().unwrap(), content);
-    send_message(connection, message_id.unwrap(), Uuid::parse_str(&receiver_id).ok().unwrap())
+    let message_id = create_message(connection, Uuid::parse_str(&sender_id).ok().unwrap(), content).await;
+    send_message(connection, message_id.unwrap(), Uuid::parse_str(&receiver_id).ok().unwrap()).await.ok();
 }

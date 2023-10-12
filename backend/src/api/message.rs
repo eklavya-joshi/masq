@@ -1,28 +1,29 @@
 use chrono::Utc;
-use diesel::result::Error;
-use diesel::{PgConnection, SelectableHelper, RunQueryDsl};
-use diesel::prelude::*;
+use sqlx::{PgConnection, query, Error};
 use uuid::Uuid;
 
 use crate::{
-    models::{User, Message, MessageRecipient}, 
-    schema
+    models::{Message, MessageRecipient}, 
 };
 
-pub fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid, Error> {
-    use schema::users::dsl::*;
-    use schema::messages::dsl::*;
+pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid, Error> {
 
-    match users
-        .find(author_id)
-        .select(User::as_select())
-        .load(conn) {
-            Ok(_) => {},
-            Err(e) => {
-                println!("Error: {:?}", e);
-                e;
-            },
-        };
+    // match users
+    //     .find(author_id)
+    //     .select(User::as_select())
+    //     .load(conn) {
+    //         Ok(_) => {},
+    //         Err(e) => {
+    //             println!("Error: {:?}", e);
+    //             e;
+    //         },
+    //     };
+
+    query!(
+        r#"SELECT * FROM Users WHERE id=$1"#, 
+        author_id)
+        .fetch_one(conn.as_mut())
+        .await?;
 
     let msg_id = Uuid::new_v4();
 
@@ -33,41 +34,61 @@ pub fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: Str
         created: Utc::now().naive_local(),
     };
 
-    diesel::insert_into(messages)
-        .values(&new_message)
-        .returning(Message::as_returning())
-        .get_result(conn)
-        .expect("Couldn't create message");
+    // diesel::insert_into(messages)
+    //     .values(&new_message)
+    //     .returning(Message::as_returning())
+    //     .get_result(conn)
+    //     .expect("Couldn't create message");
+
+    query!(
+        r#"INSERT INTO Messages(id, author, content, created)
+        VALUES ($1, $2, $3, $4)"#,
+        new_message.id,
+        new_message.author,
+        new_message.content,
+        new_message.created
+    )
+    .execute(conn)
+    .await?;
 
     return Ok(msg_id);
 }
 
-pub fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) {
-    use schema::users::dsl::*;
-    use schema::messages::dsl::*;
-    use schema::message_recipients::dsl::*;
+pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) -> Result<Uuid, Error> {
 
-    match users
-        .find(receiver_id)
-        .select(User::as_select())
-        .load(conn) {
-            Ok(_) => {},
-            Err(e) => {
-                println!("Error: {:?}", e);
-                return;
-            },
-        };
+    // match users
+    //     .find(receiver_id)
+    //     .select(User::as_select())
+    //     .load(conn) {
+    //         Ok(_) => {},
+    //         Err(e) => {
+    //             println!("Error: {:?}", e);
+    //             return;
+    //         },
+    //     };
 
-    let msg = match messages
-        .find(msg_id)
-        .select(Message::as_select())
-        .load(conn) {
-            Ok(msg) => msg,
-            Err(e) => {
-                println!("Error: {:?}", e);
-                return;
-            },
-        };
+    query!(
+        r#"SELECT * FROM Users WHERE id=$1"#, 
+        receiver_id)
+        .fetch_one(conn.as_mut())
+        .await?;
+
+    // let msg = match messages
+    //     .find(msg_id)
+    //     .select(Message::as_select())
+    //     .load(conn) {
+    //         Ok(msg) => msg,
+    //         Err(e) => {
+    //             println!("Error: {:?}", e);
+    //             return;
+    //         },
+    //     };
+
+    query!(
+        r#"SELECT * FROM Messages WHERE id=$1"#, 
+        msg_id)
+        .fetch_one(conn.as_mut())
+        .await?;
     
     println!("Sending message");
 
@@ -78,10 +99,23 @@ pub fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) {
         recipient_group: None,
     };
 
-    diesel::insert_into(message_recipients)
-        .values(&new_recipient)
-        .returning(MessageRecipient::as_returning())
-        .get_result(conn)
-        .expect("Couldn't send message");
+    // diesel::insert_into(message_recipients)
+    //     .values(&new_recipient)
+    //     .returning(MessageRecipient::as_returning())
+    //     .get_result(conn)
+    //     .expect("Couldn't send message");
+
+    query!(
+        r#"INSERT INTO Message_Recipients(id, message_id, recipient, recipient_group)
+        VALUES ($1, $2, $3, $4)"#,
+        new_recipient.id,
+        new_recipient.message_id,
+        new_recipient.recipient,
+        new_recipient.recipient_group
+    )
+    .execute(conn)
+    .await?;
+
+    return Ok(new_recipient.id)
     
 }

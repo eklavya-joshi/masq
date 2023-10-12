@@ -4,8 +4,9 @@ use backend::{
     api::user::verify_user
 };
 
-fn main() {
-    let connection = &mut establish_connection();
+#[tokio::main]
+async fn main() {
+    let connection = &mut establish_connection().await;
 
     let mut username = String::new();
     let mut tag_str = String::new();
@@ -28,6 +29,6 @@ fn main() {
         .ok()
         .unwrap();
 
-    verify_user(connection, username, tag_num, password);
+    verify_user(connection, username, tag_num, password).await;
 
 }

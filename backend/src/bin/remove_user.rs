@@ -5,9 +5,9 @@ use backend::{
 };
 
 
-
-fn main() {
-    let connection = &mut establish_connection();
+#[tokio::main]
+async fn main() {
+    let connection = &mut establish_connection().await;
 
     let mut id_str = String::new();
 
@@ -16,9 +16,9 @@ fn main() {
     stdin().read_line(&mut id_str).unwrap();
     let id_str = id_str.trim_end().to_string();
 
-    match remove_user(connection, id_str) {
-        Ok(_) => println!("Removed user"),
-        Err(e) => println!("{:?}", e),
-    }
+    remove_user(connection, id_str).await;// {
+    //     Ok(_) => println!("Removed user"),
+    //     Err(e) => println!("{:?}", e),
+    // }
 
 }

@@ -4,8 +4,9 @@ use backend::{
     api::user::get_users
 };
 
-fn main() {
-    let connection = &mut establish_connection();
+#[tokio::main]
+async fn main() {
+    let connection = &mut establish_connection().await;
 
     let mut name = String::new();
     let mut n_str = String::new();
@@ -22,5 +23,5 @@ fn main() {
         .ok()
         .unwrap();
 
-    // println!("{}", get_users(connection, name, n));
+    println!("{:?}", get_users(connection, name, n).await);
 }
