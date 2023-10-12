@@ -69,9 +69,14 @@ pub async fn create_user(conn: &mut PgConnection, name_input: String, pass_input
 
 pub async fn get_users(conn: &mut PgConnection, user_name: String, n: u32) -> Result<Vec<UserInfo>> {
 
+    if n <= 0 {
+        return Ok(vec![]);
+    }
+
     let existing_usernames = query!(
-        r#"SELECT name, tag, created FROM Users WHERE name iLIKE $1"#,
-        format!("%{user_name}%")
+        r#"SELECT name, tag, created FROM Users WHERE name iLIKE $1 LIMIT $2"#,
+        format!("%{user_name}%"),
+        min(n.try_into().unwrap(), 25)
     )
     .fetch_all(conn.as_mut())
     .await?;

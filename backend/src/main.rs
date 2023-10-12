@@ -1,8 +1,6 @@
 use std::sync::Arc;
 
-use axum::{Router, routing::{get, post}, extract::{State, Query}, response::{IntoResponse, Html}, Json};
-use serde::Deserialize;
-use serde_json::{Value, json};
+use axum::{Router, routing::get};
 
 pub mod error;
 pub mod api;
@@ -16,17 +14,6 @@ use crate::{
     users::users_router
   }
 };
-
-#[derive(Deserialize)]
-struct GetUsers {
-  name: String,
-  n: u32
-}
-
-struct TestPayload {
-    username: String,
-    password: String,
-}
 
 #[tokio::main]
 async fn main() {
