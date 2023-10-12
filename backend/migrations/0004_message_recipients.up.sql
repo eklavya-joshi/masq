@@ -1,5 +1,5 @@
--- Your SQL goes here
-CREATE TABLE message_recipients (
+-- Add up migration script here
+CREATE TABLE MessageRecipients (
     id UUID PRIMARY KEY,
     message_id UUID NOT NULL,
         FOREIGN KEY(message_id) REFERENCES Messages(id),

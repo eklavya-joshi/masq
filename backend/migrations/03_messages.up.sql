@@ -1,4 +1,4 @@
--- Your SQL goes here
+-- Add up migration script here
 CREATE TABLE messages (
     id UUID PRIMARY KEY,
     author UUID NOT NULL, 
