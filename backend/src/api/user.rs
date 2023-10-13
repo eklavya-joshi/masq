@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     database::schema::User,
     api::error::{Error, Result},
-    utils::crypt::{encrypt, decrypt}
+    utils::crypt::{encrypt, decrypt}, middleware::jwt::create_token
 };
 
 #[derive(Debug)]
@@ -14,7 +14,7 @@ pub struct UserInfo {
     pub created: NaiveDateTime
 }
 
-pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) -> Result<User> {
+pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) -> Result<String> {
 
     let user_id: Uuid = Uuid::new_v4();
 
@@ -38,22 +38,26 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
         salt: Some(crypt.salt), 
         pass: crypt.hash, 
         created: Utc::now().naive_local(), 
-        active: true  
+        active: true,
+        token: None
     };
 
+    let token = create_token(new_user.name.clone())?;
+
     query!(
-        r#"INSERT INTO Users(id, name, salt, pass, created)
-        VALUES ($1, $2, $3, $4, $5)"#,
+        r#"INSERT INTO Users(id, name, salt, pass, created, token)
+        VALUES ($1, $2, $3, $4, $5, $6)"#,
         new_user.id,
         new_user.name,
         new_user.salt,
         new_user.pass,
-        new_user.created
+        new_user.created,
+        token
     )
     .execute(conn)
     .await?;
 
-    return Ok(new_user);
+    return Ok(token);
 
 }
 
@@ -90,7 +94,7 @@ pub async fn remove_user(conn: &mut PgConnection, id: String) -> Result<bool> {
     .map_err(|e| e.into())
 }
 
-pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) -> Result<bool> {
+pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) -> Result<String> {
 
     let user = query!(
         r#"SELECT * FROM Users WHERE name=$1"#,
@@ -100,6 +104,32 @@ pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) ->
     .await
     .or(Err(Error::UserNotFound))?;
 
-    return Ok(decrypt(user.salt.unwrap(), user.pass, pass));
+    if !decrypt(user.salt.unwrap(), user.pass, pass) {
+        return Err(Error::InvalidPassword);
+    }
 
+    let token = create_token(name)?;
+    // println!("1: {:?}", token);
+
+    query!(
+        r#"UPDATE Users SET token = $1 WHERE name = $2"#,
+        token,
+        user.name
+    )
+    .execute(conn)
+    .await.ok().unwrap();
+
+    Ok(token)
+}
+
+pub async fn logout_user(conn: &mut PgConnection, name: String) -> Result<bool> {
+
+    query!(
+        r#"UPDATE Users SET token = NULL WHERE name = $1"#,
+        name
+    )
+    .execute(conn)
+    .await?;
+
+    Ok(true)
 }

@@ -2,7 +2,7 @@ use chrono::NaiveDateTime;
 use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: Uuid,
@@ -11,6 +11,7 @@ pub struct User {
     pub pass: String,
     pub created: NaiveDateTime,
     pub active: bool,
+    pub token: Option<String>
 }
 
 #[derive(Serialize)]

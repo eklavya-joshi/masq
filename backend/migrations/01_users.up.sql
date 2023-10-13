@@ -5,5 +5,6 @@ CREATE TABLE users (
     salt VARCHAR(150),
     pass VARCHAR(150) NOT NULL,
     created TIMESTAMP NOT NULL,
-    active BOOLEAN NOT NULL DEFAULT TRUE
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    token TEXT
 )

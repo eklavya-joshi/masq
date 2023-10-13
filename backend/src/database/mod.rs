@@ -1,5 +1,5 @@
 use dotenvy::dotenv;
-use sqlx::{Postgres, PgConnection, Connection, Pool};
+use sqlx::{PgConnection, Connection, PgPool};
 use std::env;
 
 pub mod schema;
@@ -11,9 +11,9 @@ pub async fn establish_connection() -> PgConnection {
     PgConnection::connect(&database_url).await.unwrap()
 }
 
-pub async fn get_connection_pool() -> Pool<Postgres> {
+pub async fn get_connection_pool() -> PgPool {
     dotenv().ok();
 
     let database_url = env::var("DATABASE_URL").expect("DATABASE_URL must be set");
-    Pool::<Postgres>::connect(&database_url).await.unwrap()
+    PgPool::connect(&database_url).await.unwrap()
 }

@@ -1,7 +1,7 @@
 use std::env;
 
 use chrono::{Utc, Duration};
-use jsonwebtoken::{encode, Header, EncodingKey, decode, DecodingKey, Validation, Algorithm};
+use jsonwebtoken::{encode, Header, EncodingKey, decode, DecodingKey, Validation, Algorithm, get_current_timestamp};
 use serde::{Serialize, Deserialize};
 use dotenvy::dotenv;
 
@@ -11,19 +11,21 @@ use crate::{
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
-    iat: usize,
-    exp: usize,
+    sub: String,
+    iat: u64,
+    exp: u64,
 }
 
-pub fn create_token() -> Result<String> {
+pub fn create_token(sub: String) -> Result<String> {
     dotenv().ok();
 
-    let iat = Utc::now().timestamp() as usize;
-    let exp = (Utc::now() + Duration::seconds(30)).timestamp() as usize;
+    let iat = get_current_timestamp();
+    let exp = get_current_timestamp() + 300;
 
     let claim = Claims {
-        iat: iat,
-        exp: exp
+        sub,
+        iat,
+        exp,
     };
 
     let secret = env::var("TOKEN_SECRET").expect("JWT_SECRET must be set");
@@ -36,11 +38,9 @@ pub fn verify_token(token: String) -> Result<bool> {
     let secret = env::var("TOKEN_SECRET").expect("JWT_SECRET must be set");
     let secret = DecodingKey::from_secret(secret.as_bytes());
 
-    decode::<Claims>(&token, &secret, &Validation::new(Algorithm::HS256))?;
+    let mut validation = Validation::new(Algorithm::HS256);
+    validation.leeway = 60;
+    decode::<Claims>(&token, &secret, &validation)?.claims;
+
     Ok(true)
 }
-
-// pub async fn require_auth<B>(req: Request<B>, next: Next<B>) -> Result<Response> {
-    
-//     Ok(next.run(req).await)
-// }
