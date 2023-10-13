@@ -50,7 +50,7 @@ async fn find(
     let user_list = get_users(conn, params.name).await.unwrap();
     let mut str = String::new();
     for u in user_list {
-        str.push_str(&format!("username: {}\ncreated: {}\n", u.name, u.created.format("%Y-%m-%d %H:%M:%S")));
+        str.push_str(&format!("username: {}\ncreated: {}\n", u.name, u.created.format("%d-%m-%Y %H:%M:%S")));
     }
     Html(str)
 }
