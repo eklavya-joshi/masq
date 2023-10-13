@@ -1,3 +1,5 @@
 pub mod database;
 pub mod api;
-pub mod web;
+pub mod routes;
+pub mod middleware;
+pub mod utils;

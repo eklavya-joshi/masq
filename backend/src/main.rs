@@ -4,11 +4,13 @@ use axum::{Router, routing::get};
 
 pub mod api;
 pub mod database;
-pub mod web;
+pub mod routes;
+pub mod middleware;
+pub mod utils;
 
 use crate::{
   database::get_connection_pool,
-  web::{
+  routes::{
     AppState,
     users::users_router
   }

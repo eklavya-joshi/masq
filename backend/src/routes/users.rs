@@ -6,7 +6,8 @@ use serde_json::{json, Value};
 
 use crate::{
     api::user::{get_users, create_user, verify_user},
-    web::error::Result
+    routes::error::Result, 
+    middleware::jwt::create_token
 };
 
 use super::AppState;
@@ -53,13 +54,11 @@ async fn find(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>
 async fn create(State(state): State<Arc<AppState>>, Json(payload): Json<CreatePayload>) -> Result<Json<Value>> {
     let conn = &mut state.pool.acquire().await?;
     let u = create_user(conn, payload.username.clone(), payload.password.clone()).await?;
-
-    let created = u.created.clone().format("%Y-%m-%d %H:%M:%S").to_string();
+    let token = create_token()?;
 
     let body = Json(json!({
-		"result": {
-			"created": created
-		}
+		"result": u,
+        "token" : token
 	}));
 
     Ok(body)
@@ -68,17 +67,16 @@ async fn create(State(state): State<Arc<AppState>>, Json(payload): Json<CreatePa
 #[debug_handler]
 async fn login(State(state): State<Arc<AppState>>, Json(payload): Json<LoginPayload>) -> Result<Json<Value>> {
     let conn = &mut state.pool.acquire().await.unwrap();
-    let u = verify_user(
-        conn, 
-        payload.username, 
-        payload.password)
-        .await
-        .unwrap();
+    // let u: String = match verify_user(conn, payload.username, payload.password).await {
+    //     Ok(_) => "success".to_owned(),
+    //     Err(e) => format!("{e:?}"),
+    // };
+    let u = verify_user(conn, payload.username, payload.password).await?;
+    let token = create_token()?;
 
     let body = Json(json!({
-		"result": {
-			"logged in": u
-		}
+		"result": u,
+        "token" : token
 	}));
 
     Ok(body)

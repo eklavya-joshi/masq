@@ -2,7 +2,7 @@ use axum::{response::{IntoResponse, Response}, http::StatusCode};
 use serde::Serialize;
 use thiserror::Error;
 
-use crate::api;
+use crate::{api, middleware};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -13,7 +13,9 @@ pub enum Error {
     SqlxError,
 	// -- Request Error
 	#[error("Bad request")]
-	BadRequest
+	BadRequest,
+	#[error("Unauthorised")]
+	Unauthorised
 }
 
 impl From<sqlx::Error> for Error {
@@ -31,12 +33,26 @@ impl From<api::error::Error> for Error {
     }
 }
 
+impl From<middleware::error::Error> for Error {
+    fn from(value: middleware::error::Error) -> Self {
+        match value {
+			middleware::error::Error::Unauthorised => Error::Unauthorised,
+            middleware::error::Error::InvalidToken => Error::BadRequest,
+			_ => Error::BadRequest,
+        }
+    }
+}
+
 impl IntoResponse for Error {
 	fn into_response(self) -> Response {
 		// println!("->> {:<12} - model::Error {self:?}", "INTO_RES");
 
 		// Create a placeholder Axum reponse.
-		let mut response = StatusCode::INTERNAL_SERVER_ERROR.into_response();
+		let mut response = match self {
+			Error::Unauthorised => StatusCode::UNAUTHORIZED.into_response(),
+			Error::BadRequest => StatusCode::BAD_REQUEST.into_response(),
+			_ => StatusCode::INTERNAL_SERVER_ERROR.into_response()
+		};
 
 		// Insert the Error into the reponse.
 		response.extensions_mut().insert(self);

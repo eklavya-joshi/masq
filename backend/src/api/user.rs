@@ -1,12 +1,11 @@
 use chrono::{Utc, NaiveDateTime};
-use rand::Rng;
 use sqlx::{PgConnection, query};
 use uuid::Uuid;
-use bcrypt::hash_with_salt;
 
 use crate::{
     database::schema::User,
     api::error::{Error, Result},
+    utils::crypt::{encrypt, decrypt}
 };
 
 #[derive(Debug)]
@@ -30,15 +29,14 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
         return Err(Error::UsernameNotAvailable);
     }
 
-    let salt = rand::thread_rng().gen::<[u8; 16]>();
-    let pass = hash_with_salt(pass, bcrypt::DEFAULT_COST, salt).unwrap().to_string();
+    let crypt = encrypt(pass);
 
     let new_user = User 
     { 
         id: user_id, 
         name: name.to_owned(),
-        salt: Some(hex::encode(salt)), 
-        pass, 
+        salt: Some(crypt.salt), 
+        pass: crypt.hash, 
         created: Utc::now().naive_local(), 
         active: true  
     };
@@ -102,11 +100,6 @@ pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) ->
     .await
     .or(Err(Error::UserNotFound))?;
 
-    let salt: [u8 ; 16] = hex::decode(&user.salt.unwrap()).unwrap().try_into().unwrap();
-    let target_hash = user.pass;
-
-    let new_hash = hash_with_salt(pass, bcrypt::DEFAULT_COST, salt).unwrap().to_string();
-
-    return Ok(new_hash.eq(&target_hash));
+    return Ok(decrypt(user.salt.unwrap(), user.pass, pass));
 
 }

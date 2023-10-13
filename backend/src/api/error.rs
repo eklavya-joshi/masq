@@ -1,8 +1,9 @@
+use serde::Serialize;
 use thiserror::Error;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Clone, Copy, Error)]
+#[derive(Debug, Clone, Copy, Error, Serialize)]
 pub enum Error {
     // -- Database Error
     #[error("User not found")]
