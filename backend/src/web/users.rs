@@ -5,7 +5,7 @@ use serde::Deserialize;
 use serde_json::{json, Value};
 
 use crate::{
-    api::user::{get_users, create_user, verify_user, show_user},
+    api::user::{get_users, create_user, verify_user},
     web::error::Result
 };
 
@@ -14,7 +14,6 @@ use super::AppState;
 #[derive(Deserialize)]
 struct GetUsers {
     name: String,
-    n: u32
 }
 
 #[derive(Debug, Deserialize)]
@@ -26,7 +25,6 @@ struct CreatePayload {
 #[derive(Debug, Deserialize)]
 struct LoginPayload {
     username: String,
-    tag: i16,
     password: String,
 }
 
@@ -43,10 +41,10 @@ pub async fn users_router(app_state: Arc<AppState>) -> Router {
 #[debug_handler]
 async fn find(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>) -> impl IntoResponse {
     let conn = &mut state.pool.acquire().await.unwrap();
-    let user_list = get_users(conn, params.name, params.n).await.unwrap();
+    let user_list = get_users(conn, params.name).await.unwrap();
     let mut str = String::new();
     for u in user_list {
-        str.push_str(&format!("username: {}\ncreated: {}\n", show_user(u.name, u.tag), u.created.format("%Y-%m-%d %H:%M:%S")));
+        str.push_str(&format!("username: {}\ncreated: {}\n", u.name, u.created.format("%Y-%m-%d %H:%M:%S")));
     }
     Html(str)
 }
@@ -69,11 +67,11 @@ async fn create(State(state): State<Arc<AppState>>, Json(payload): Json<CreatePa
 
 #[debug_handler]
 async fn login(State(state): State<Arc<AppState>>, Json(payload): Json<LoginPayload>) -> Result<Json<Value>> {
+    let conn = &mut state.pool.acquire().await.unwrap();
     let u = verify_user(
-        &mut state.pool.acquire().await.unwrap(), 
-        payload.username.clone(), 
-        payload.tag, 
-        payload.password.clone())
+        conn, 
+        payload.username, 
+        payload.password)
         .await
         .unwrap();
 

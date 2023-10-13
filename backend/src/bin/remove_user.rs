@@ -16,9 +16,6 @@ async fn main() {
     stdin().read_line(&mut id_str).unwrap();
     let id_str = id_str.trim_end().to_string();
 
-    remove_user(connection, id_str).await;// {
-    //     Ok(_) => println!("Removed user"),
-    //     Err(e) => println!("{:?}", e),
-    // }
+    println!("{:?}", remove_user(connection, id_str).await);
 
 }

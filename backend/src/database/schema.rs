@@ -2,12 +2,11 @@ use chrono::NaiveDateTime;
 use serde::Serialize;
 use uuid::Uuid;
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: Uuid,
     pub name: String,
-    pub tag: i16,
     pub salt: Option<String>,
     pub pass: String,
     pub created: NaiveDateTime,

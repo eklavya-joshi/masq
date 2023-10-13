@@ -20,7 +20,6 @@ async fn main() {
     stdin().read_line(&mut pass).unwrap();
     let pass = pass.trim_end().to_string();
 
-    create_user(connection, name, pass).await;
+    println!("{:?}", create_user(connection, name, pass).await);
 
-    println!("user created");
 }
