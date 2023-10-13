@@ -1,18 +1,20 @@
 use axum::response::{Response, IntoResponse};
 use serde::Serialize;
+use serde_with::{serde_as, DisplayFromStr};
 use thiserror::Error;
 
 use crate::routes;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Clone, Copy, Error, Serialize)]
+#[serde_as]
+#[derive(Debug, Serialize, Error)]
 pub enum Error {
     // -- Server side
     #[error("Invalid token")]
     InvalidToken,
     #[error("Database error")]
-    SqlxError,
+    SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
     // -- Client side
     #[error("Unauthorised")]
     Unauthorised
@@ -28,8 +30,8 @@ impl From<jsonwebtoken::errors::Error> for Error {
 }
 
 impl From<sqlx::error::Error> for Error {
-    fn from(_value: sqlx::error::Error) -> Self {
-        Error::SqlxError
+    fn from(value: sqlx::error::Error) -> Self {
+        Error::SqlxError(value)
     }
 }
 

@@ -1,11 +1,13 @@
 use serde::Serialize;
+use serde_with::{serde_as, DisplayFromStr};
 use thiserror::Error;
 
 use crate::middleware;
 
 pub type Result<T> = core::result::Result<T, Error>;
 
-#[derive(Debug, Clone, Copy, Error, Serialize)]
+#[serde_as]
+#[derive(Debug, Serialize, Error)]
 pub enum Error {
     // -- Database Error
     #[error("User not found")]
@@ -13,7 +15,7 @@ pub enum Error {
     #[error("Messsage not found")]
     MessageNotFound,
     #[error("Database error")]
-    SqlxError,
+    SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
     // -- JWT Error
     #[error("JWT error")]
     JWTError,
@@ -25,8 +27,8 @@ pub enum Error {
 }
 
 impl From<sqlx::Error> for Error {
-    fn from(_value: sqlx::error::Error) -> Self {
-        Error::SqlxError
+    fn from(value: sqlx::error::Error) -> Self {
+        Error::SqlxError(value)
     }
 }
 
@@ -34,7 +36,7 @@ impl From<middleware::error::Error> for Error {
     fn from(value: middleware::error::Error) -> Self {
         match value {
             middleware::error::Error::InvalidToken => Error::JWTError,
-            middleware::error::Error::SqlxError => Error::SqlxError,
+            middleware::error::Error::SqlxError(value) => Error::SqlxError(value),
             middleware::error::Error::Unauthorised => Error::JWTError,
         }
     }

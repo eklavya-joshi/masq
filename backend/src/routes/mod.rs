@@ -6,6 +6,8 @@ pub mod users;
 pub mod users_login;
 pub mod error;
 
+pub use self::error::{Error, Result};
+
 #[derive(Clone, FromRef)]
 pub struct AppState {
     pub pool: Pool<Postgres>,
