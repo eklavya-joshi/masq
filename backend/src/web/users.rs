@@ -52,7 +52,7 @@ async fn find(State(state): State<Arc<AppState>>, Query(params): Query<GetUsers>
 #[debug_handler]
 async fn create(State(state): State<Arc<AppState>>, Json(payload): Json<CreatePayload>) -> Result<Json<Value>> {
     let conn = &mut state.pool.acquire().await?;
-    let u = create_user(conn, payload.username.clone(), payload.password.clone()).await.unwrap();
+    let u = create_user(conn, payload.username.clone(), payload.password.clone()).await?;
 
     let created = u.created.clone().format("%Y-%m-%d %H:%M:%S").to_string();
 
