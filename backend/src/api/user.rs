@@ -108,7 +108,6 @@ pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) ->
     }
 
     let token = create_token(name)?;
-    // println!("1: {:?}", token);
 
     query!(
         r#"UPDATE Users SET token = $1 WHERE name = $2"#,
