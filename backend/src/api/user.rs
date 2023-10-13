@@ -57,7 +57,7 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
     .execute(conn)
     .await?;
 
-    return Ok(token);
+    Ok(token)
 
 }
 
@@ -71,7 +71,7 @@ pub async fn get_users(conn: &mut PgConnection, name: String) -> Result<Vec<User
     .fetch_all(conn.as_mut())
     .await?;
 
-    if existing_usernames.len() == 0 {
+    if existing_usernames.is_empty() {
         return Ok(vec![]);
     }
 
@@ -89,8 +89,7 @@ pub async fn remove_user(conn: &mut PgConnection, id: String) -> Result<bool> {
         Uuid::parse_str(&id).ok().unwrap()
     )
     .execute(conn)
-    .await
-    .and_then(|_| Ok(true))
+    .await.map(|_| true)
     .map_err(|e| e.into())
 }
 

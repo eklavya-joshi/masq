@@ -1,13 +1,11 @@
 use std::env;
 
-use chrono::{Utc, Duration};
+
 use jsonwebtoken::{encode, Header, EncodingKey, decode, DecodingKey, Validation, Algorithm, get_current_timestamp};
 use serde::{Serialize, Deserialize};
 use dotenvy::dotenv;
 
-use crate::{
-    middleware::error::{Result}
-};
+use crate::middleware::error::Result;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {
@@ -40,7 +38,7 @@ pub fn verify_token(token: String) -> Result<bool> {
 
     let mut validation = Validation::new(Algorithm::HS256);
     validation.leeway = 60;
-    decode::<Claims>(&token, &secret, &validation)?.claims;
+    decode::<Claims>(&token, &secret, &validation)?;
 
     Ok(true)
 }

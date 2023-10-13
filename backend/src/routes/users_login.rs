@@ -1,4 +1,4 @@
-use axum::{Router, routing::{post}, extract::{State}, Json};
+use axum::{Router, routing::post, extract::State, Json};
 use axum_macros::debug_handler;
 use serde::Deserialize;
 use sqlx::PgPool;

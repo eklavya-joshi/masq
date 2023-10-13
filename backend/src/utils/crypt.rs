@@ -25,5 +25,5 @@ pub fn decrypt(salt: String, hash: String, str: String) -> bool {
     let salt = hex::decode(salt).unwrap().try_into().unwrap();
     let new_hash = hash_with_salt(str, bcrypt::DEFAULT_COST, salt).unwrap().to_string();
 
-    return hash.eq(&new_hash)
+    hash.eq(&new_hash)
 }

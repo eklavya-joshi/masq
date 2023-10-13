@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::{Response, IntoResponse}};
+use axum::response::{Response, IntoResponse};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -28,7 +28,7 @@ impl From<jsonwebtoken::errors::Error> for Error {
 }
 
 impl From<sqlx::error::Error> for Error {
-    fn from(value: sqlx::error::Error) -> Self {
+    fn from(_value: sqlx::error::Error) -> Self {
         Error::SqlxError
     }
 }

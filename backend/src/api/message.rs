@@ -36,7 +36,7 @@ pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_st
     .execute(conn)
     .await?;
 
-    return Ok(msg_id);
+    Ok(msg_id)
 }
 
 pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) -> Result<Uuid> {
@@ -75,6 +75,6 @@ pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uu
     .execute(conn)
     .await?;
 
-    return Ok(new_recipient.id)
+    Ok(new_recipient.id)
     
 }
