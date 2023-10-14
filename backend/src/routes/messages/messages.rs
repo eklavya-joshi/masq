@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::{extract::State, Json, Extension};
 use axum_macros::debug_handler;
 use serde::{Deserialize, Serialize};
@@ -7,10 +5,8 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::{
-    api::message::{create_dm},
-    routes::{
-        error::Result
-    }, 
+    api::message::create_dm,
+    routes::error::Result, 
 };
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

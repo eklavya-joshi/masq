@@ -1,4 +1,4 @@
-use axum::{extract::{State, Query}, Json, Extension};
+use axum::{extract::{State, Query}, Json};
 use axum_macros::debug_handler;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -9,8 +9,7 @@ use crate::{
     routes::{
         AuthResponse,
         error::Result
-    }, 
-    database::schema::User
+    }
 };
 
 #[derive(Debug, Deserialize)]
