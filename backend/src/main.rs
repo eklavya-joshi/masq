@@ -11,8 +11,7 @@ use crate::{
   database::get_connection_pool,
   routes::{
     AppState,
-    users::users_router,
-    users_login::users_login_router
+    users::{users::users_router, users_login::users_login_router},
   },
   middleware::auth::require_auth,
   error::Result

@@ -13,7 +13,7 @@ use crate::{
     database::schema::User
 };
 
-use super::AppState;
+use crate::routes::AppState;
 
 #[derive(Deserialize)]
 struct GetUsers {
@@ -30,7 +30,6 @@ struct CreatePayload {
 struct LogoutPayload {
     username: String,
 }
-
 
 pub async fn users_router(app_state: AppState) -> Router {
 

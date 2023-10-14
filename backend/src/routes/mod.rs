@@ -3,7 +3,6 @@ use serde::{Serialize, Deserialize};
 use sqlx::{Postgres, Pool};
 
 pub mod users;
-pub mod users_login;
 pub mod error;
 
 pub use self::error::{Error, Result};
