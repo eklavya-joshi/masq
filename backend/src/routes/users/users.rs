@@ -5,7 +5,7 @@ use serde_json::{json, Value};
 use sqlx::PgPool;
 
 use crate::{
-    api::user::{get_users, create_user, logout_user},
+    api::user::{get_users, create_user, logout_user, verify_user},
     routes::{
         AuthResponse,
         error::Result
@@ -16,18 +16,24 @@ use crate::{
 use crate::routes::AppState;
 
 #[derive(Deserialize)]
-struct GetUsers {
+pub struct GetUsers {
     name: String,
 }
 
 #[derive(Debug, Deserialize)]
-struct CreatePayload {
+pub struct CreatePayload {
     username: String,
     password: String,
 }
 
 #[derive(Debug, Deserialize)]
-struct LogoutPayload {
+pub struct LoginPayload {
+    username: String,
+    password: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct LogoutPayload {
     username: String,
 }
 
@@ -41,7 +47,7 @@ pub async fn users_router(app_state: AppState) -> Router {
 }
 
 #[debug_handler]
-async fn find(
+pub async fn find(
     State(pool): State<PgPool>, 
     Query(params): Query<GetUsers>,
 ) -> Result<Json<Value>> {
@@ -55,7 +61,7 @@ async fn find(
 }
 
 #[debug_handler]
-async fn create(State(pool): State<PgPool>, Json(payload): Json<CreatePayload>) -> Result<Json<AuthResponse>> {
+pub async fn create(State(pool): State<PgPool>, Json(payload): Json<CreatePayload>) -> Result<Json<AuthResponse>> {
     let conn = &mut pool.acquire().await?;
     let token = create_user(conn, &payload.username, &payload.password).await?;
 
@@ -63,7 +69,16 @@ async fn create(State(pool): State<PgPool>, Json(payload): Json<CreatePayload>) 
 }
 
 #[debug_handler]
-async fn logout(
+pub async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginPayload>) -> Result<Json<AuthResponse>> {
+    let conn = &mut pool.acquire().await?;
+    let token = verify_user(conn, &payload.username, &payload.password).await?;
+
+    Ok(Json(AuthResponse::new(token)))
+
+}
+
+#[debug_handler]
+pub async fn logout(
     State(pool): State<PgPool>, 
     Extension(_user): Extension<User>,
     Json(payload): Json<LogoutPayload>,

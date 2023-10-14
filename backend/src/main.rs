@@ -11,9 +11,8 @@ use crate::{
   database::get_connection_pool,
   routes::{
     AppState,
-    users::{users::users_router, users_login::users_login_router},
+    router
   },
-  middleware::auth::require_auth,
   error::Result
 };
 
@@ -23,10 +22,7 @@ async fn main() -> Result<()> {
   let pool = get_connection_pool().await?;
   let app_state = AppState {pool: pool};
 
-  let app = Router::new()
-    .nest("/users", users_router(app_state.clone()).await)
-    .route_layer(from_fn_with_state(app_state.clone(), require_auth))
-    .nest("/users", users_login_router(app_state.clone()).await);
+  let app = router(app_state).await;
   
 
   // run it with hyper on localhost:3000
