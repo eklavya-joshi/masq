@@ -30,7 +30,6 @@ pub async fn users_login_router(app_state: AppState) -> Router {
 async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginPayload>) -> Result<Json<AuthResponse>> {
     let conn = &mut pool.acquire().await?;
     let token = verify_user(conn, payload.username.clone(), payload.password).await?;
-    // println!("2: {:?}", token);
 
     Ok(Json(AuthResponse::new(token)))
 

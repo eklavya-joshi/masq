@@ -16,14 +16,14 @@ pub enum Error {
     MessageNotFound,
     #[error("Database error")]
     SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
-    // -- JWT Error
-    #[error("JWT error")]
-    JWTError,
     // -- User Input Error
     #[error("Username not available")]
     UsernameNotAvailable,
     #[error("Invalid password")]
-    InvalidPassword
+    InvalidPassword,
+    // -- Module Error
+    #[error("Middleware error")]
+    Middleware(middleware::Error)
 }
 
 impl From<sqlx::Error> for Error {
@@ -34,10 +34,6 @@ impl From<sqlx::Error> for Error {
 
 impl From<middleware::error::Error> for Error {
     fn from(value: middleware::error::Error) -> Self {
-        match value {
-            middleware::error::Error::InvalidToken => Error::JWTError,
-            middleware::error::Error::SqlxError(value) => Error::SqlxError(value),
-            middleware::error::Error::Unauthorised => Error::JWTError,
-        }
+        Error::Middleware(value)
     }
 }

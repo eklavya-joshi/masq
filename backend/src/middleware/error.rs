@@ -15,6 +15,8 @@ pub enum Error {
     InvalidToken,
     #[error("Database error")]
     SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
+    #[error("JWT error")]
+    JWTError(#[serde_as(as = "DisplayFromStr")] jsonwebtoken::errors::Error),
     // -- Client side
     #[error("Unauthorised")]
     Unauthorised
@@ -22,10 +24,7 @@ pub enum Error {
 
 impl From<jsonwebtoken::errors::Error> for Error {
     fn from(value: jsonwebtoken::errors::Error) -> Self {
-        match value.kind() {
-            jsonwebtoken::errors::ErrorKind::ExpiredSignature => Error::Unauthorised,
-            _ => Error::InvalidToken,
-        }
+        Error::JWTError(value)
     }
 }
 

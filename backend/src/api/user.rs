@@ -5,7 +5,7 @@ use uuid::Uuid;
 use crate::{
     database::schema::User,
     api::error::{Error, Result},
-    utils::crypt::{encrypt, decrypt}, middleware::jwt::create_token
+    utils::pwd::{encrypt, decrypt}, middleware::jwt::create_token
 };
 
 #[derive(Debug)]
@@ -18,16 +18,13 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
 
     let user_id: Uuid = Uuid::new_v4();
 
-    let existing_usernames = query!(
+    let _ = query!(
         r#"SELECT COUNT(*) FROM Users WHERE name=$1"#,
         name
     )
     .fetch_one(conn.as_mut())
-    .await?;
-
-    if existing_usernames.count.unwrap() > 0 {
-        return Err(Error::UsernameNotAvailable);
-    }
+    .await
+    .or(Err(Error::UsernameNotAvailable));
 
     let crypt = encrypt(pass);
 
