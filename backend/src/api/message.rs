@@ -48,21 +48,24 @@ pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, co
     Ok(msg_id)
 }
 
-pub async fn create_dm(conn: &mut PgConnection, id_1: Uuid, id_2: Uuid) -> Result<Uuid> {
+pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Result<Uuid> {
 
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#,
-        id_1)
+        id)
         .fetch_one(conn.as_mut())
         .await
-        .or(Err(Error::UserNotFound(id_1.to_string())))?;
+        .or(Err(Error::UserNotFound(id.to_string())))?;
 
-    query!(
-        r#"SELECT * FROM Users WHERE id=$1"#,
-        id_2)
+    let target_id = query!(
+        r#"SELECT * FROM Users WHERE name=$1"#,
+        target)
         .fetch_one(conn.as_mut())
         .await
-        .or(Err(Error::UserNotFound(id_2.to_string())))?;
+        .or(Err(Error::UserNotFound(target.to_string())))?
+        .id;
+
+    if id == target_id { return Err(Error::NoSelfDm) }
 
     let inbox: Inbox = Inbox {
         id: Uuid::new_v4(),
@@ -82,7 +85,7 @@ pub async fn create_dm(conn: &mut PgConnection, id_1: Uuid, id_2: Uuid) -> Resul
         r#"INSERT INTO InboxRecipients(inbox, recipient)
         VALUES($1, $2)"#,
         inbox.id,
-        id_1)
+        id)
     .execute(conn.as_mut())
     .await?;
 
@@ -90,7 +93,7 @@ pub async fn create_dm(conn: &mut PgConnection, id_1: Uuid, id_2: Uuid) -> Resul
         r#"INSERT INTO InboxRecipients(inbox, recipient)
         VALUES($1, $2)"#,
         inbox.id,
-        id_2)
+        target_id)
     .execute(conn)
     .await?;
 

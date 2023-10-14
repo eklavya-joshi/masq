@@ -13,7 +13,7 @@ use crate::{
     database::schema::User
 };
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 pub struct GetUsers {
     name: String,
 }
@@ -69,7 +69,6 @@ pub async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginPayload>
 #[debug_handler]
 pub async fn logout(
     State(pool): State<PgPool>, 
-    Extension(_user): Extension<User>,
     Json(payload): Json<LogoutPayload>,
 ) -> Result<Json<Value>> {
     let conn = &mut pool.acquire().await?;

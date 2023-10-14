@@ -23,6 +23,8 @@ pub enum Error {
     UsernameNotAvailable,
     #[error("Invalid password")]
     InvalidPassword,
+    #[error("No Self DM")]
+    NoSelfDm,
     // -- Module Error
     #[error("Middleware error")]
     Middleware(middleware::Error)

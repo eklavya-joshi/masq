@@ -28,7 +28,7 @@ async fn main() -> Result<()> {
     stdin().read_line(&mut receiver_id).unwrap();
     let receiver_id = receiver_id.trim_end().to_string();
 
-    let dm_id = create_dm(connection, Uuid::parse_str(&sender_id).unwrap(), Uuid::parse_str(&receiver_id).unwrap()).await?;
+    let dm_id = create_dm(connection, Uuid::parse_str(&sender_id).unwrap(), &receiver_id).await?;
     let _message_id = send_message(connection, Uuid::parse_str(&sender_id).unwrap(), dm_id, &content).await?;
 
     Ok(())
