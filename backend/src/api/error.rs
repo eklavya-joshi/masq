@@ -2,7 +2,7 @@ use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 use thiserror::Error;
 
-use crate::middleware;
+use crate::{middleware, database};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -35,5 +35,13 @@ impl From<sqlx::Error> for Error {
 impl From<middleware::error::Error> for Error {
     fn from(value: middleware::error::Error) -> Self {
         Error::Middleware(value)
+    }
+}
+
+impl From<database::error::Error> for Error {
+    fn from(value: database::error::Error) -> Self {
+        match value {
+            database::error::Error::SqlxError(x) => Error::SqlxError(x),
+        }
     }
 }

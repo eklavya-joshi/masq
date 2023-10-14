@@ -1,4 +1,5 @@
 use chrono::{Utc, NaiveDateTime};
+use serde::Serialize;
 use sqlx::{PgConnection, query};
 use uuid::Uuid;
 
@@ -8,13 +9,13 @@ use crate::{
     utils::pwd::{encrypt, decrypt}, middleware::jwt::create_token
 };
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct UserInfo {
     pub name: String,
     pub created: NaiveDateTime
 }
 
-pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) -> Result<String> {
+pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<String> {
 
     let user_id: Uuid = Uuid::new_v4();
 
@@ -26,7 +27,7 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
     .await
     .or(Err(Error::UsernameNotAvailable));
 
-    let crypt = encrypt(pass);
+    let crypt = encrypt(&pass).await;
 
     let new_user = User 
     { 
@@ -39,7 +40,7 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
         token: None
     };
 
-    let token = create_token(new_user.name.clone())?;
+    let token = create_token(&new_user.name)?;
 
     query!(
         r#"INSERT INTO Users(id, name, salt, pass, created, token)
@@ -58,7 +59,7 @@ pub async fn create_user(conn: &mut PgConnection, name: String, pass: String) ->
 
 }
 
-pub async fn get_users(conn: &mut PgConnection, name: String) -> Result<Vec<UserInfo>> {
+pub async fn get_users(conn: &mut PgConnection, name: &str) -> Result<Vec<UserInfo>> {
 
     let existing_usernames = query!(
         r#"SELECT name, created FROM Users WHERE name iLIKE $1 LIMIT $2"#,
@@ -80,7 +81,7 @@ pub async fn get_users(conn: &mut PgConnection, name: String) -> Result<Vec<User
     Ok(user_list)
 }
 
-pub async fn remove_user(conn: &mut PgConnection, id: String) -> Result<bool> {
+pub async fn remove_user(conn: &mut PgConnection, id: &str) -> Result<bool> {
     query!(
         r#"DELETE FROM Users WHERE id=$1"#,
         Uuid::parse_str(&id).ok().unwrap()
@@ -90,7 +91,7 @@ pub async fn remove_user(conn: &mut PgConnection, id: String) -> Result<bool> {
     .map_err(|e| e.into())
 }
 
-pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) -> Result<String> {
+pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<String> {
 
     let user = query!(
         r#"SELECT * FROM Users WHERE name=$1"#,
@@ -100,7 +101,7 @@ pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) ->
     .await
     .or(Err(Error::UserNotFound))?;
 
-    if !decrypt(user.salt.unwrap(), user.pass, pass) {
+    if !decrypt(&user.salt.unwrap(), &user.pass, &pass).await {
         return Err(Error::InvalidPassword);
     }
 
@@ -112,7 +113,7 @@ pub async fn verify_user(conn: &mut PgConnection, name: String, pass: String) ->
         user.name
     )
     .execute(conn)
-    .await.ok().unwrap();
+    .await?;
 
     Ok(token)
 }

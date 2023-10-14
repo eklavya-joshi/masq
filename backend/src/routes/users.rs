@@ -1,4 +1,4 @@
-use axum::{Router, routing::{get, post}, extract::{State, Query}, response::{IntoResponse, Html}, Json, Extension};
+use axum::{Router, routing::{get, post}, extract::{State, Query}, Json, Extension};
 use axum_macros::debug_handler;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -45,20 +45,20 @@ pub async fn users_router(app_state: AppState) -> Router {
 async fn find(
     State(pool): State<PgPool>, 
     Query(params): Query<GetUsers>,
-) -> impl IntoResponse {
-    let conn = &mut pool.acquire().await.unwrap();
-    let user_list = get_users(conn, params.name).await.unwrap();
-    let mut str = String::new();
-    for u in user_list {
-        str.push_str(&format!("username: {}\ncreated: {}\n", u.name, u.created.format("%d-%m-%Y %H:%M:%S")));
-    }
-    Html(str)
+) -> Result<Json<Value>> {
+    let conn = &mut pool.acquire().await?;
+    let user_list = get_users(conn, &params.name).await?;
+    let body = Json(json!({
+        "users" : user_list
+    }));
+
+    Ok(body)
 }
 
 #[debug_handler]
 async fn create(State(pool): State<PgPool>, Json(payload): Json<CreatePayload>) -> Result<Json<AuthResponse>> {
     let conn = &mut pool.acquire().await?;
-    let token = create_user(conn, payload.username.clone(), payload.password.clone()).await?;
+    let token = create_user(conn, &payload.username, &payload.password).await?;
 
     Ok(Json(AuthResponse::new(token)))
 }

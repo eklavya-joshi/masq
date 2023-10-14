@@ -1,12 +1,13 @@
 use std::io::stdin;
 use backend::{
     database::establish_connection,
-    api::user::create_user
+    api::user::create_user,
+    api::Result
 };
 
 #[tokio::main]
-async fn main() {
-    let connection = &mut establish_connection().await;
+async fn main() -> Result<()> {
+    let connection = &mut establish_connection().await?;
 
     let mut name = String::new();
     let mut pass = String::new();
@@ -20,6 +21,8 @@ async fn main() {
     stdin().read_line(&mut pass).unwrap();
     let pass = pass.trim_end().to_string();
 
-    println!("{:?}", create_user(connection, name, pass).await);
+    println!("{:?}", create_user(connection, &name, &pass).await?);
+
+    Ok(())
 
 }

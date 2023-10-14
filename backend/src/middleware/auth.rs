@@ -20,7 +20,7 @@ pub async fn require_auth<T>(State(pool): State<PgPool>, mut req: Request<T>, ne
 
     let Some(_) = user else { return Err(Error::Unauthorised); };
 
-    verify_token(token.clone())?;
+    verify_token(&token)?;
 
     let bearer = Authorization::bearer(&token).map_err(|_| Error::InvalidToken)?;
     req.headers_mut().typed_insert::<Authorization<Bearer>>(bearer);
