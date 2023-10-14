@@ -6,7 +6,7 @@ use super::AppState;
 
 pub mod users;
 
-pub async fn users_router(app_state: AppState) -> Router {
+pub async fn auth_users_router(app_state: AppState) -> Router {
 
     Router::new()
         .route("/find", get(find))
@@ -15,7 +15,7 @@ pub async fn users_router(app_state: AppState) -> Router {
 
 }
 
-pub async fn new_users_router(app_state: AppState) -> Router {
+pub async fn noauth_users_router(app_state: AppState) -> Router {
 
     Router::new()
         .route("/create", post(create))
