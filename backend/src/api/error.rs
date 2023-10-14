@@ -11,9 +11,11 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     // -- Database Error
     #[error("User not found")]
-    UserNotFound,
+    UserNotFound(String),
     #[error("Messsage not found")]
-    MessageNotFound,
+    MessageNotFound(String),
+    #[error("Inbox not found")]
+    InboxNotFound(String),
     #[error("Database error")]
     SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
     // -- User Input Error

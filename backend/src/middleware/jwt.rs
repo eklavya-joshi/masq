@@ -18,7 +18,7 @@ pub fn create_token(sub: &str) -> Result<String> {
     dotenv().ok();
 
     let exp = env::var("TOKEN_EXP").map_or_else(|_| 300, |x| x.parse().expect("TOKEN_EXP must be an integer"));
-    println!("{:?}", exp);
+
     let iat = get_current_timestamp();
     let exp = get_current_timestamp() + exp;
 
@@ -41,7 +41,7 @@ pub fn verify_token(token: &str) -> Result<bool> {
     let secret = DecodingKey::from_secret(secret.as_bytes());
 
     let leeway = env::var("TOKEN_LEEWAY").map_or_else(|_| 60, |x| x.parse().expect("TOKEN_LEEWAY must be an integer"));
-    println!("{:?}", leeway);
+    
     let mut validation = Validation::new(Algorithm::HS256);
     validation.leeway = leeway;
     decode::<Claims>(&token, &secret, &validation)?;

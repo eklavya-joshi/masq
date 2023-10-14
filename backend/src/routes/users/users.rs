@@ -1,4 +1,4 @@
-use axum::{Router, routing::{get, post}, extract::{State, Query}, Json, Extension};
+use axum::{extract::{State, Query}, Json, Extension};
 use axum_macros::debug_handler;
 use serde::Deserialize;
 use serde_json::{json, Value};
@@ -12,8 +12,6 @@ use crate::{
     }, 
     database::schema::User
 };
-
-use crate::routes::AppState;
 
 #[derive(Deserialize)]
 pub struct GetUsers {
@@ -35,15 +33,6 @@ pub struct LoginPayload {
 #[derive(Debug, Deserialize)]
 pub struct LogoutPayload {
     username: String,
-}
-
-pub async fn users_router(app_state: AppState) -> Router {
-
-    Router::new()
-        .route("/find", get(find))
-        .route("/create", post(create))
-        .route("/logout", post(logout))
-        .with_state(app_state)
 }
 
 #[debug_handler]

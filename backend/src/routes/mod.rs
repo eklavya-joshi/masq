@@ -6,8 +6,10 @@ use sqlx::{Postgres, Pool};
 pub mod users;
 pub mod error;
 
+use crate::middleware::auth::require_auth;
+
 pub use self::error::{Error, Result};
-use self::users::users::users_router;
+use self::users::{users_router, new_users_router};
 
 #[derive(Clone, FromRef)]
 pub struct AppState {
@@ -33,5 +35,7 @@ pub async fn router(app_state: AppState) -> Router {
 
     Router::new()
         .nest("/users", users_router(app_state.clone()).await)
+        .route_layer(from_fn_with_state(app_state.clone(), require_auth))
+        .nest("/users", new_users_router(app_state.clone()).await)
 
 }

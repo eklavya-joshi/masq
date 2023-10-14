@@ -16,11 +16,17 @@ pub struct User {
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Group {
+pub struct Inbox {
     pub id: Uuid,
-    pub name: String,
     pub created: NaiveDateTime,
     pub active: bool,
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct InboxRecipients {
+    pub inbox: Uuid,
+    pub recipient: Uuid
 }
 
 #[derive(Serialize)]
@@ -28,6 +34,7 @@ pub struct Group {
 pub struct Message {
     pub id: Uuid,
     pub author: Uuid,
+    pub inbox: Uuid,
     pub content: String,
     pub created: NaiveDateTime
 }

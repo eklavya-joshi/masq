@@ -99,7 +99,7 @@ pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
     )
     .fetch_one(conn.as_mut())
     .await
-    .or(Err(Error::UserNotFound))?;
+    .or(Err(Error::UserNotFound(name.to_string())))?;
 
     if !decrypt(&user.salt.unwrap(), &user.pass, &pass).await {
         return Err(Error::InvalidPassword);

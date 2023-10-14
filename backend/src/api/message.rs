@@ -3,33 +3,42 @@ use sqlx::{PgConnection, query};
 use uuid::Uuid;
 
 use crate::{
-    database::schema::{Message, MessageRecipient}, 
+    database::schema::{Message, Inbox}, 
     api::error::{Error, Result},
 };
 
-pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_str: String) -> Result<Uuid> {
+pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, content: &str) -> Result<Uuid> {
 
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#, 
-        author_id)
+        author)
         .fetch_one(conn.as_mut())
         .await
-        .or(Err(Error::UserNotFound))?;
+        .or(Err(Error::UserNotFound(author.to_string())))?;
+
+    query!(
+        r#"SELECT * FROM Inbox WHERE id=$1"#, 
+        inbox)
+        .fetch_one(conn.as_mut())
+        .await
+        .or(Err(Error::InboxNotFound(inbox.to_string())))?;
 
     let msg_id = Uuid::new_v4();
 
     let new_message = Message {
         id: msg_id,
-        author: author_id,
-        content: content_str,
+        author,
+        inbox,
+        content: content.to_string(),
         created: Utc::now().naive_local(),
     };
 
     query!(
-        r#"INSERT INTO Messages(id, author, content, created)
-        VALUES ($1, $2, $3, $4)"#,
+        r#"INSERT INTO Messages(id, author, inbox, content, created)
+        VALUES ($1, $2, $3, $4, $5)"#,
         new_message.id,
         new_message.author,
+        new_message.inbox,
         new_message.content,
         new_message.created
     )
@@ -39,42 +48,91 @@ pub async fn create_message(conn: &mut PgConnection, author_id: Uuid, content_st
     Ok(msg_id)
 }
 
-pub async fn send_message(conn: &mut PgConnection, msg_id: Uuid, receiver_id: Uuid) -> Result<Uuid> {
+pub async fn create_dm(conn: &mut PgConnection, id_1: Uuid, id_2: Uuid) -> Result<Uuid> {
 
     query!(
-        r#"SELECT * FROM Users WHERE id=$1"#, 
-        receiver_id)
+        r#"SELECT * FROM Users WHERE id=$1"#,
+        id_1)
         .fetch_one(conn.as_mut())
         .await
-        .or(Err(Error::UserNotFound))?;
+        .or(Err(Error::UserNotFound(id_1.to_string())))?;
 
     query!(
-        r#"SELECT * FROM Messages WHERE id=$1"#, 
-        msg_id)
+        r#"SELECT * FROM Users WHERE id=$1"#,
+        id_2)
         .fetch_one(conn.as_mut())
         .await
-        .or(Err(Error::MessageNotFound))?;
-    
-    println!("Sending message");
+        .or(Err(Error::UserNotFound(id_2.to_string())))?;
 
-    let new_recipient = MessageRecipient {
+    let inbox: Inbox = Inbox {
         id: Uuid::new_v4(),
-        message_id: msg_id,
-        recipient: Some(receiver_id),
-        recipient_group: None,
+        created: Utc::now().naive_local(),
+        active: true
     };
 
     query!(
-        r#"INSERT INTO MessageRecipients(id, message_id, recipient, recipient_group)
-        VALUES ($1, $2, $3, $4)"#,
-        new_recipient.id,
-        new_recipient.message_id,
-        new_recipient.recipient,
-        new_recipient.recipient_group
-    )
+        r#"INSERT INTO Inbox(id, created)
+        VALUES($1, $2)"#,
+        inbox.id,
+        inbox.created)
+    .execute(conn.as_mut())
+    .await?;
+
+    query!(
+        r#"INSERT INTO InboxRecipients(inbox, recipient)
+        VALUES($1, $2)"#,
+        inbox.id,
+        id_1)
+    .execute(conn.as_mut())
+    .await?;
+
+    query!(
+        r#"INSERT INTO InboxRecipients(inbox, recipient)
+        VALUES($1, $2)"#,
+        inbox.id,
+        id_2)
     .execute(conn)
     .await?;
 
-    Ok(new_recipient.id)
-    
+    Ok(inbox.id)
 }
+
+// pub async fn send_message(conn: &mut PgConnection, message: Uuid, receiver: Uuid) -> Result<Uuid> {
+
+//     query!(
+//         r#"SELECT * FROM Users WHERE id=$1"#, 
+//         receiver)
+//         .fetch_one(conn.as_mut())
+//         .await
+//         .or(Err(Error::UserNotFound(receiver.to_string())))?;
+
+//     query!(
+//         r#"SELECT * FROM Messages WHERE id=$1"#, 
+//         message)
+//         .fetch_one(conn.as_mut())
+//         .await
+//         .or(Err(Error::MessageNotFound(message.to_string())))?;
+    
+//     println!("Sending message");
+
+//     let new_recipient = MessageRecipient {
+//         id: Uuid::new_v4(),
+//         message_id: message,
+//         recipient: Some(receiver),
+//         recipient_group: None,
+//     };
+
+//     // query!(
+//     //     r#"INSERT INTO MessageRecipients(id, message_id, recipient, recipient_group)
+//     //     VALUES ($1, $2, $3, $4)"#,
+//     //     new_recipient.id,
+//     //     new_recipient.message_id,
+//     //     new_recipient.recipient,
+//     //     new_recipient.recipient_group
+//     // )
+//     // .execute(conn)
+//     // .await?;
+
+//     Ok(new_recipient.id)
+    
+// }

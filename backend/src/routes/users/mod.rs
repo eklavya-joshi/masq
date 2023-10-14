@@ -1,22 +1,24 @@
-use axum::{Router, routing::{get, post}, middleware::from_fn_with_state};
-
-use crate::middleware::auth::require_auth;
+use axum::{Router, routing::{get, post}};
 
 use self::users::{find, create, logout, login};
 
-use super::{AppState, Result};
+use super::AppState;
 
 pub mod users;
-pub mod users_login;
 
-async fn users_router(app_state: AppState) -> Router {
+pub async fn users_router(app_state: AppState) -> Router {
 
     Router::new()
         .route("/find", get(find))
-        .route("/create", post(create))
         .route("/logout", post(logout))
-        .route_layer(from_fn_with_state(app_state.clone(), require_auth))
-        .route("/login", post(login))
         .with_state(app_state.clone())
 
+}
+
+pub async fn new_users_router(app_state: AppState) -> Router {
+
+    Router::new()
+        .route("/create", post(create))
+        .route("/login", post(login))
+        .with_state(app_state)
 }

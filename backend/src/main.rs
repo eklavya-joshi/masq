@@ -1,5 +1,3 @@
-use axum::{Router, middleware::from_fn_with_state};
-
 pub mod api;
 pub mod database;
 pub mod routes;
