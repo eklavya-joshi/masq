@@ -1,15 +1,14 @@
-import Sidebar from "./Sidebar";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+
+import LandingPage from "./components/landing_page/LandingPage";
+import React from "react";
 
 export default function App() {
   return (
-    <div className="w-screen h-screen bg-primary">
-      <div class="grid h-screen place-items-center
-                  font-family:Georgia text-6xl font-bold text-white">
-        Masq
-      </div>
-      <h1 className="flex">
-        <Sidebar/>
-      </h1>
-    </div>
+      <Router>
+        <Routes>
+          <Route path="/" element={<LandingPage />} />
+        </Routes>
+      </Router>
   )
 }
