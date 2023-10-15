@@ -1,11 +1,17 @@
 use chrono::Utc;
-use sqlx::{PgConnection, query};
+use serde::{Serialize, Deserialize};
+use sqlx::{PgConnection, query, query_as};
 use uuid::Uuid;
 
 use crate::{
     database::schema::{Message, Inbox}, 
     api::error::{Error, Result},
 };
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct InboxInfo {
+    pub inbox: Uuid
+}
 
 pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, content: &str) -> Result<Uuid> {
 
@@ -104,4 +110,41 @@ pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Resul
     .await?;
 
     Ok(inbox.id)
+}
+
+pub async fn find_inboxes(conn: &mut PgConnection, id: Uuid) -> Result<Vec<InboxInfo>> {
+
+    let mut inboxes: Vec<InboxInfo> = vec![];
+
+    let mut group_inboxes = query_as!(
+        InboxInfo,
+        r#"SELECT inbox FROM InboxRecipients WHERE recipient=$1"#,
+        id)
+    .fetch_all(conn.as_mut())
+    .await?;
+
+    inboxes.append(&mut group_inboxes);
+
+    let mut dm_inboxes = query_as!(
+        InboxInfo,
+        r#"SELECT inbox FROM InboxDmRecipients WHERE recipient1=$1 OR recipient2=$1"#,
+        id)
+    .fetch_all(conn.as_mut())
+    .await?;
+
+    inboxes.append(&mut dm_inboxes);
+
+    Ok(inboxes)
+}
+
+pub async fn find_messages(conn: &mut PgConnection, id: Uuid) -> Result<Vec<Message>> {
+
+    let messages = query_as!(
+        Message,
+        r#"SELECT * from Messages WHERE inbox=$1"#,
+        id)
+    .fetch_all(conn.as_mut())
+    .await?;
+
+    Ok(messages)
 }

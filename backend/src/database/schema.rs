@@ -1,8 +1,8 @@
 use chrono::NaiveDateTime;
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use uuid::Uuid;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: Uuid,
@@ -14,7 +14,7 @@ pub struct User {
     pub token: Option<String>
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Inbox {
     pub id: Uuid,
@@ -22,14 +22,14 @@ pub struct Inbox {
     pub active: bool,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct InboxRecipients {
     pub inbox: Uuid,
     pub recipient: Uuid
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Message {
     pub id: Uuid,
@@ -39,7 +39,7 @@ pub struct Message {
     pub created: NaiveDateTime
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MessageRecipient {
     pub id: Uuid,
