@@ -1,4 +1,5 @@
 use axum::{middleware::from_fn_with_state, Router};
+use tower_cookies::CookieManagerLayer;
 use axum_macros::FromRef;
 use serde::{Serialize, Deserialize};
 use sqlx::{Postgres, Pool};
@@ -40,5 +41,6 @@ pub async fn router(app_state: AppState) -> Router {
         .nest("/messages", messages_router(app_state.clone()).await)
         .route_layer(from_fn_with_state(app_state.clone(), require_auth))
         .nest("/users", noauth_users_router(app_state.clone()).await)
+        .layer(CookieManagerLayer::new())
 
 }

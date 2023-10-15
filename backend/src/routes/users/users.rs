@@ -1,5 +1,6 @@
 use axum::{extract::{State, Query}, Json};
 use axum_macros::debug_handler;
+use tower_cookies::{Cookies, Cookie};
 use serde::Deserialize;
 use serde_json::{json, Value};
 use sqlx::PgPool;
@@ -49,17 +50,25 @@ pub async fn find(
 }
 
 #[debug_handler]
-pub async fn create(State(pool): State<PgPool>, Json(payload): Json<CreatePayload>) -> Result<Json<AuthResponse>> {
+pub async fn create(
+    cookies: Cookies,
+    State(pool): State<PgPool>, 
+    Json(payload): Json<CreatePayload>) -> Result<Json<AuthResponse>> {
     let conn = &mut pool.acquire().await?;
     let token = create_user(conn, &payload.username, &payload.password).await?;
+    cookies.add(Cookie::new("token", token.to_string()));
 
     Ok(Json(AuthResponse::new(token)))
 }
 
 #[debug_handler]
-pub async fn login(State(pool): State<PgPool>, Json(payload): Json<LoginPayload>) -> Result<Json<AuthResponse>> {
+pub async fn login(
+    cookies: Cookies,
+    State(pool): State<PgPool>, 
+    Json(payload): Json<LoginPayload>) -> Result<Json<AuthResponse>> {
     let conn = &mut pool.acquire().await?;
     let token = verify_user(conn, &payload.username, &payload.password).await?;
+    cookies.add(Cookie::new("token", token.to_string()));
 
     Ok(Json(AuthResponse::new(token)))
 

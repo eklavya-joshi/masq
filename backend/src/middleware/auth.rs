@@ -28,5 +28,6 @@ pub async fn require_auth<T>(State(pool): State<PgPool>, mut req: Request<T>, ne
     req.extensions_mut().insert(user.id);
     req.headers_mut().typed_insert::<Authorization<Bearer>>(bearer);
 
+
     Ok(next.run(req).await)
 }
