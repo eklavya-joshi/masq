@@ -25,7 +25,7 @@ pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
     )
     .fetch_one(conn.as_mut())
     .await
-    .or(Err(Error::UsernameNotAvailable));
+    .or(Err(Error::UsernameNotAvailable(name.to_owned())));
 
     let crypt = encrypt(&pass).await;
 

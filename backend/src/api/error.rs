@@ -20,11 +20,13 @@ pub enum Error {
     SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
     // -- User Input Error
     #[error("Username not available")]
-    UsernameNotAvailable,
+    UsernameNotAvailable(String),
     #[error("Invalid password")]
     InvalidPassword,
     #[error("No Self DM")]
     NoSelfDm,
+    #[error("DM already exists")]
+    DMAlreadyExists(String),
     // -- Module Error
     #[error("Middleware error")]
     Middleware(middleware::Error)

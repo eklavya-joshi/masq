@@ -1,6 +1,6 @@
 -- Add up migration script here
 CREATE TABLE Messages (
-    id UUID PRIMARY KEY,
+    id UUID PRIMARY KEY NOT NULL,
     author UUID NOT NULL, 
         FOREIGN KEY(author) REFERENCES Users(id),
     inbox UUID NOT NULL, 

@@ -49,6 +49,7 @@ pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, co
 }
 
 pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Result<Uuid> {
+    // TODO: Can't create existing DMs
 
     query!(
         r#"SELECT * FROM Users WHERE id=$1"#,
@@ -81,61 +82,26 @@ pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Resul
     .execute(conn.as_mut())
     .await?;
 
-    query!(
-        r#"INSERT INTO InboxRecipients(inbox, recipient)
-        VALUES($1, $2)"#,
-        inbox.id,
-        id)
-    .execute(conn.as_mut())
-    .await?;
+    match query!(
+        r#"SELECT inbox FROM InboxDmRecipients WHERE 
+        (recipient1=$1 AND recipient2=$2) OR
+        (recipient1=$2 AND recipient2=$1)"#,
+        id,
+        target_id)
+    .fetch_optional(conn.as_mut())
+    .await? {
+        Some(x) => return Err(Error::DMAlreadyExists(x.inbox.to_string())),
+        None => {}
+    };
 
     query!(
-        r#"INSERT INTO InboxRecipients(inbox, recipient)
-        VALUES($1, $2)"#,
+        r#"INSERT INTO InboxDmRecipients(inbox, recipient1, recipient2)
+        VALUES($1, $2, $3)"#,
         inbox.id,
+        id,
         target_id)
-    .execute(conn)
+    .execute(conn.as_mut())
     .await?;
 
     Ok(inbox.id)
 }
-
-// pub async fn send_message(conn: &mut PgConnection, message: Uuid, receiver: Uuid) -> Result<Uuid> {
-
-//     query!(
-//         r#"SELECT * FROM Users WHERE id=$1"#, 
-//         receiver)
-//         .fetch_one(conn.as_mut())
-//         .await
-//         .or(Err(Error::UserNotFound(receiver.to_string())))?;
-
-//     query!(
-//         r#"SELECT * FROM Messages WHERE id=$1"#, 
-//         message)
-//         .fetch_one(conn.as_mut())
-//         .await
-//         .or(Err(Error::MessageNotFound(message.to_string())))?;
-    
-//     println!("Sending message");
-
-//     let new_recipient = MessageRecipient {
-//         id: Uuid::new_v4(),
-//         message_id: message,
-//         recipient: Some(receiver),
-//         recipient_group: None,
-//     };
-
-//     // query!(
-//     //     r#"INSERT INTO MessageRecipients(id, message_id, recipient, recipient_group)
-//     //     VALUES ($1, $2, $3, $4)"#,
-//     //     new_recipient.id,
-//     //     new_recipient.message_id,
-//     //     new_recipient.recipient,
-//     //     new_recipient.recipient_group
-//     // )
-//     // .execute(conn)
-//     // .await?;
-
-//     Ok(new_recipient.id)
-    
-// }
