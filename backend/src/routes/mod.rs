@@ -1,8 +1,11 @@
+use axum::response::Html;
+use axum::routing::get;
 use axum::{middleware::from_fn_with_state, Router};
 use tower_cookies::CookieManagerLayer;
 use axum_macros::FromRef;
 use serde::{Serialize, Deserialize};
 use sqlx::{Postgres, Pool};
+use tower_http::cors::CorsLayer;
 
 pub mod users;
 pub mod messages;
@@ -42,5 +45,7 @@ pub async fn router(app_state: AppState) -> Router {
         .route_layer(from_fn_with_state(app_state.clone(), require_auth))
         .nest("/users", noauth_users_router(app_state.clone()).await)
         .layer(CookieManagerLayer::new())
+        .route("/hello", get(|| async {Html("i love poop")}))
+        .layer(CorsLayer::very_permissive())
 
 }

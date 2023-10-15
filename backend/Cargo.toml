@@ -11,6 +11,7 @@ axum = { version = "0.6.20", features = ["headers", "macros"]}
 sqlx = { version = "0.7.2", features = ["postgres", "runtime-tokio", "uuid", "chrono"]}
 tokio = { version = "1.32.0", features = ["full"]}
 tower-cookies = { version = "0.9.0", features = ["axum-core"]}
+tower-http = { version = "0.4.4", features = ["cors"] }
 serde = { version = "1.0.188", features = ["derive"]}
 serde_with = { version = "3.3.0", features = ["chrono_0_4"] }
 dotenvy = "0.15.0"
