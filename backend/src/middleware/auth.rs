@@ -1,13 +1,16 @@
 use axum::{http::Request, middleware::Next, response::Response, headers::{Authorization, authorization::Bearer, HeaderMapExt}, extract::State};
 use sqlx::{query, PgPool};
+use tower_cookies::Cookies;
 
 use crate::middleware::error::{Error, Result};
 
 use super::jwt::verify_token;
 
-pub async fn require_auth<T>(State(pool): State<PgPool>, mut req: Request<T>, next: Next<T>) -> Result<Response> {
+pub async fn require_auth<T>(State(pool): State<PgPool>, cookies: Cookies, mut req: Request<T>, next: Next<T>) -> Result<Response> {
     
-    let token = req.headers().typed_get::<Authorization<Bearer>>().ok_or(Error::InvalidToken)?.token().to_owned();
+    // let token = req.headers().typed_get::<Authorization<Bearer>>().ok_or(Error::InvalidToken)?.token().to_owned();
+    
+    let token = cookies.get("token").map(|c| c.value().to_string()).ok_or(Error::InvalidToken)?;
 
     let conn = &mut pool.acquire().await?;
 
