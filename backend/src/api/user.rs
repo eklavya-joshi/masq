@@ -19,13 +19,14 @@ pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
 
     let user_id: Uuid = Uuid::new_v4();
 
-    let _ = query!(
+    let u = query!(
         r#"SELECT COUNT(*) FROM Users WHERE name=$1"#,
         name
     )
-    .fetch_one(conn.as_mut())
-    .await
-    .or(Err(Error::UsernameNotAvailable(name.to_owned())));
+    .fetch_optional(conn.as_mut())
+    .await?;
+
+    if u.is_some() {return Err(Error::UsernameNotAvailable(name.to_owned()));}
 
     let crypt = encrypt(&pass).await;
 

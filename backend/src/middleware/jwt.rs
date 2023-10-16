@@ -17,7 +17,8 @@ pub struct Claims {
 pub fn create_token(sub: &str) -> Result<String> {
     dotenv().ok();
 
-    let exp = env::var("TOKEN_EXP").map_or_else(|_| 300, |x| x.parse().expect("TOKEN_EXP must be an integer"));
+    // let exp = env::var("TOKEN_EXP").map_or_else(|_| 300, |x| x.parse().expect("TOKEN_EXP must be an integer"));
+    let exp = 43200;
 
     let iat = get_current_timestamp();
     let exp = get_current_timestamp() + exp;
