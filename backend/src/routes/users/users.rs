@@ -5,7 +5,7 @@ use sqlx::PgPool;
 
 use crate::{
     api::user::{get_users, create_user, logout_user, verify_user},
-    routes::error::Result
+    routes::error::{Result, log}
 };
 
 use super::models::*;
@@ -15,12 +15,12 @@ pub async fn find(
     State(pool): State<PgPool>, 
     Query(params): Query<FindUsersQuery>,
 ) -> Result<Json<FindUsersResponse>> {
+    println!("->> {:<18} - {}", "HANDLER", "/users/find");
+
     let conn = &mut pool.acquire().await?;
     let user_list = get_users(conn, &params.name).await?;
-
-    let body = Json(FindUsersResponse { users: user_list });
-
-    Ok(body)
+    
+    log(Json(FindUsersResponse { users: user_list }), "/users/find")
 }
 
 #[debug_handler]
@@ -28,11 +28,14 @@ pub async fn create(
     cookies: Cookies,
     State(pool): State<PgPool>, 
     Json(payload): Json<CreateUserPayload>) -> Result<Json<AuthResponse>> {
+    println!("->> {:<18} - {}", "HANDLER", "/users/create");
+
     let conn = &mut pool.acquire().await?;
+
     let token = create_user(conn, &payload.username, &payload.password).await?;
     cookies.add(Cookie::new("token", token.to_string()));
 
-    Ok(Json(AuthResponse { token }))
+    log(Json(AuthResponse { token }), "/users/create")
 }
 
 #[debug_handler]
@@ -40,11 +43,14 @@ pub async fn login(
     cookies: Cookies,
     State(pool): State<PgPool>, 
     Json(payload): Json<LoginPayload>) -> Result<Json<AuthResponse>> {
+    println!("->> {:<18} - {}", "HANDLER", "/users/login");
+
     let conn = &mut pool.acquire().await?;
+
     let token = verify_user(conn, &payload.username, &payload.password).await?;
     cookies.add(Cookie::new("token", token.to_string()));
 
-    Ok(Json(AuthResponse { token }))
+    log(Json(AuthResponse { token }), "/users/login")
 
 }
 
@@ -53,11 +59,11 @@ pub async fn logout(
     State(pool): State<PgPool>, 
     Json(payload): Json<LogoutPayload>,
 ) -> Result<Json<LogoutResponse>> {
+    println!("->> {:<18} - {}", "HANDLER", "/users/logout");
+
     let conn = &mut pool.acquire().await?;
 
     logout_user(conn, payload.username).await?;
 
-    let body = Json(LogoutResponse { result: "success".to_string() });
-
-    Ok(body)
+    log(Json(LogoutResponse { result: "success".to_string() }), "/users/logout")
 }

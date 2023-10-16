@@ -45,7 +45,6 @@ impl From<middleware::error::Error> for Error {
 
 impl IntoResponse for Error {
 	fn into_response(self) -> Response {
-		println!("->> {:<12} - model::Error {self:?}", "INTO_RES");
 
 		let mut response = match self {
 			Error::Unauthorised => StatusCode::UNAUTHORIZED.into_response(),
@@ -55,8 +54,22 @@ impl IntoResponse for Error {
 			_ => StatusCode::INTERNAL_SERVER_ERROR.into_response()
 		};
 
+		println!("->> {:<18} - {self:?} | STATUS CODE: {:?}", "ERR_INTO_RES", response.status());
+
 		response.extensions_mut().insert(self);
 
 		response
 	}
+}
+
+pub fn log<T: core::fmt::Debug>(res: T, route: &str) -> Result<T> {
+	println!("->> {:<18} - {route}", "SUCCESS");
+
+    Ok(res)
+}
+
+pub fn log_with_res<T: core::fmt::Debug>(res: T, route: &str) -> Result<T> {
+	println!("->> {:<18} - {route}", "SUCCESS");
+
+    Ok(res)
 }
