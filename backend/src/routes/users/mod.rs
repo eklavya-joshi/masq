@@ -5,6 +5,7 @@ use self::users::{find, create, logout, login};
 use super::AppState;
 
 pub mod users;
+pub mod models;
 
 pub async fn auth_users_router(app_state: AppState) -> Router {
 

@@ -4,6 +4,7 @@ use crate::routes::messages::messages::{create_dm, find_inboxes, find_messages, 
 use super::AppState;
 
 pub mod messages;
+pub mod models;
 
 pub async fn messages_router(app_state: AppState) -> Router {
 

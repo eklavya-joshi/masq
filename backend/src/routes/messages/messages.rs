@@ -1,54 +1,14 @@
 use axum::{extract::{State, Query}, Json, Extension};
 use axum_macros::debug_handler;
-use serde::{Deserialize, Serialize};
 use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::{
-    api::message::{InboxInfo, self},
-    routes::error::Result, database::schema::Message, 
+    api::message::{self},
+    routes::error::Result
 };
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateDmResponse {
-    dm: Uuid
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SendMessageResponse {
-    message: Uuid
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FindInboxResponse {
-    inboxes: Vec<InboxInfo>
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct FindMessagesResponse {
-    messages: Vec<Message>
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct CreateDmPayload {
-    target: String,
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SendMessagePayload {
-    inbox: Uuid,
-    content: String
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GetInboxes {
-
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GetMessages {
-    inbox: Uuid
-}
+use super::models::*;
 
 
 #[debug_handler]

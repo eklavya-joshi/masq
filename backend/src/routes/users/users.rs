@@ -1,50 +1,24 @@
 use axum::{extract::{State, Query}, Json};
 use axum_macros::debug_handler;
 use tower_cookies::{Cookies, Cookie};
-use serde::Deserialize;
-use serde_json::{json, Value};
 use sqlx::PgPool;
 
 use crate::{
     api::user::{get_users, create_user, logout_user, verify_user},
-    routes::{
-        AuthResponse,
-        error::Result
-    }
+    routes::error::Result
 };
 
-#[derive(Debug, Deserialize)]
-pub struct GetUsers {
-    name: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CreatePayload {
-    username: String,
-    password: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct LoginPayload {
-    username: String,
-    password: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct LogoutPayload {
-    username: String,
-}
+use super::models::*;
 
 #[debug_handler]
 pub async fn find(
     State(pool): State<PgPool>, 
-    Query(params): Query<GetUsers>,
-) -> Result<Json<Value>> {
+    Query(params): Query<FindUsersQuery>,
+) -> Result<Json<FindUsersResponse>> {
     let conn = &mut pool.acquire().await?;
     let user_list = get_users(conn, &params.name).await?;
-    let body = Json(json!({
-        "users" : user_list
-    }));
+
+    let body = Json(FindUsersResponse { users: user_list });
 
     Ok(body)
 }
@@ -53,12 +27,12 @@ pub async fn find(
 pub async fn create(
     cookies: Cookies,
     State(pool): State<PgPool>, 
-    Json(payload): Json<CreatePayload>) -> Result<Json<AuthResponse>> {
+    Json(payload): Json<CreateUserPayload>) -> Result<Json<AuthResponse>> {
     let conn = &mut pool.acquire().await?;
     let token = create_user(conn, &payload.username, &payload.password).await?;
     cookies.add(Cookie::new("token", token.to_string()));
 
-    Ok(Json(AuthResponse::new(token)))
+    Ok(Json(AuthResponse { token }))
 }
 
 #[debug_handler]
@@ -70,7 +44,7 @@ pub async fn login(
     let token = verify_user(conn, &payload.username, &payload.password).await?;
     cookies.add(Cookie::new("token", token.to_string()));
 
-    Ok(Json(AuthResponse::new(token)))
+    Ok(Json(AuthResponse { token }))
 
 }
 
@@ -78,14 +52,12 @@ pub async fn login(
 pub async fn logout(
     State(pool): State<PgPool>, 
     Json(payload): Json<LogoutPayload>,
-) -> Result<Json<Value>> {
+) -> Result<Json<LogoutResponse>> {
     let conn = &mut pool.acquire().await?;
 
     logout_user(conn, payload.username).await?;
 
-    let body = Json(json!({
-        "result" : "success"
-    }));
+    let body = Json(LogoutResponse { result: "success".to_string() });
 
     Ok(body)
 }

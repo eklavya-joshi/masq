@@ -1,5 +1,5 @@
 use chrono::{Utc, NaiveDateTime};
-use serde::Serialize;
+use serde::{Serialize, Deserialize};
 use sqlx::{PgConnection, query};
 use uuid::Uuid;
 
@@ -9,7 +9,7 @@ use crate::{
     utils::pwd::{encrypt, decrypt}, middleware::jwt::create_token
 };
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct UserInfo {
     pub name: String,
     pub created: NaiveDateTime
