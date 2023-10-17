@@ -15,8 +15,8 @@ pub struct InboxInfo {
 
 pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, content: &str) -> Result<Uuid> {
 
-    query!(
-        r#"SELECT * FROM Users WHERE id=$1"#, 
+    let author_name = query!(
+        r#"SELECT name FROM Users WHERE id=$1"#, 
         author)
         .fetch_one(conn.as_mut())
         .await
@@ -33,17 +33,19 @@ pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, co
 
     let new_message = Message {
         id: msg_id,
-        author,
+        author_id: author,
+        author_name: author_name.name,
         inbox,
         content: content.to_string(),
         created: Utc::now().naive_local(),
     };
 
     query!(
-        r#"INSERT INTO Messages(id, author, inbox, content, created)
-        VALUES ($1, $2, $3, $4, $5)"#,
+        r#"INSERT INTO Messages(id, author_id, author_name, inbox, content, created)
+        VALUES ($1, $2, $3, $4, $5, $6)"#,
         new_message.id,
-        new_message.author,
+        new_message.author_id,
+        new_message.author_name,
         new_message.inbox,
         new_message.content,
         new_message.created

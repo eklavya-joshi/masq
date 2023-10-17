@@ -20,7 +20,13 @@ pub async fn create_dm(
     println!("->> {:<18} - {}", "HANDLER", "/create/dm");
 
     let conn = &mut pool.acquire().await?;
-    let dm = message::create_dm(conn, user, &payload.target).await?;
+    let dm = match message::create_dm(conn, user, &payload.target).await {
+        Ok(dm) => dm,
+        Err(e) => match e {
+            crate::api::Error::DMAlreadyExists(dm) => Uuid::parse_str(&dm).unwrap(),
+            e => return Err(e.into()),
+        },
+    };
 
     log(Json(CreateDmResponse { dm }), "/create/dm")
 }
@@ -29,7 +35,7 @@ pub async fn create_dm(
 pub async fn find_inboxes(
     Extension(user): Extension<Uuid>,
     State(pool): State<PgPool>, 
-    Query(_params): Query<GetInboxes>,
+    Query(_params): Query<GetInboxesQuery>,
 ) -> Result<Json<FindInboxResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/find/inbox");
 
@@ -42,7 +48,7 @@ pub async fn find_inboxes(
 #[debug_handler]
 pub async fn find_messages(
     State(pool): State<PgPool>, 
-    Query(params): Query<GetMessages>,
+    Query(params): Query<GetMessagesQuery>,
 ) -> Result<Json<FindMessagesResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/find/messages");
 

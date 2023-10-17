@@ -1,4 +1,3 @@
-use axum::http::HeaderValue;
 use axum::response::Html;
 use axum::routing::get;
 use axum::{middleware::from_fn_with_state, Router};

@@ -11,8 +11,8 @@ pub async fn messages_router(app_state: AppState) -> Router {
     Router::new()
         .route("/new", post(create_dm))
         .route("/inbox", get(find_inboxes))
-        .route("/find/messages", get(find_messages))
-        .route("/send/message", post(send_message))
+        .route("/find", get(find_messages))
+        .route("/send", post(send_message))
         .with_state(app_state.clone())
 
 }

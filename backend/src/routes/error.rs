@@ -13,6 +13,8 @@ pub enum Error {
     // -- Database Error
     #[error("Database error")]
     SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
+	#[error("UUID error")]
+	UuidError(#[serde_as(as = "DisplayFromStr")] uuid::Error),
 	// -- Request Error
 	#[error("Bad request")]
 	BadRequest,
@@ -29,6 +31,12 @@ impl From<sqlx::Error> for Error {
     fn from(value: sqlx::error::Error) -> Self {
         Error::SqlxError(value)
     }
+}
+
+impl From<uuid::Error> for Error {
+	fn from(value: uuid::Error) -> Self {
+		Error::UuidError(value)
+	}
 }
 
 impl From<api::error::Error> for Error {

@@ -35,11 +35,11 @@ pub struct SendMessagePayload {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GetInboxes {
+pub struct GetInboxesQuery {
 
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GetMessages {
+pub struct GetMessagesQuery {
     pub inbox: Uuid
 }
