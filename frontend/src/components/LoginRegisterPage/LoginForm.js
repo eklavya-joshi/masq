@@ -1,5 +1,6 @@
 import Cookies from "js-cookie";
 import React from "react";
+import Axios from "axios";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -34,18 +35,14 @@ export default function LoginPage() {
 
     const handleRegisterSubmit = async (e) => {
         e.preventDefault();
-        const data = {
-            username: username,
-            password: password
-        };
-        const response = await fetch("http://localhost:8080/users/create", {
-            method: "POST",
-            headers: {
-                "content-type": "application/json",
+        const { data } = await Axios.post(
+            "http://localhost:8080/users/create",
+            {
+                username: username,
+                password: password
             },
-            credentials: "include",
-            body: JSON.stringify(data),
-        });
+            { withCredentials: true },
+        );
     }
 
     return (

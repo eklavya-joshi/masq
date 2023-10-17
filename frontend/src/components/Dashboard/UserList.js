@@ -1,19 +1,16 @@
 import React from "react";
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Axios from "axios";
 import Cookies from "js-cookie";
 
 export default function UserList() {
 
+    const navigate = useNavigate();
+
     const [userList, setUserList] = useState([]);
 
     const fetchUsers = async () => {
-        const { a } = await Axios.get(
-            "http://localhost:8080/hello", {
-            withCredentials: true,
-            headers: { 'X-Requested-With': 'XMLHttpRequest' }
-        },
-        );
         const { data } = await Axios.get(
             "http://localhost:8080/users/find?name=", {
             withCredentials: true,
@@ -30,6 +27,8 @@ export default function UserList() {
             { target },
             { withCredentials: true },
         );
+        console.log(data.dm);
+        navigate("/dm/" + data.dm);
     };
 
     useEffect(() => {
