@@ -4,7 +4,7 @@ import LoginForm from "./LoginForm";
 export default function LandingPage() {
     return (
         <>
-            <div>
+            <div className="grid h-screen place-items-center">
                 <LoginForm />
             </div>
         </>

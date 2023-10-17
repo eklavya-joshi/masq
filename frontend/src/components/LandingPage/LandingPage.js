@@ -8,8 +8,8 @@ export default function LandingPage() {
       <h1 className="flex">
         <Sidebar />
       </h1>
-      <div className="grid h-screen place-items-center
-                  font-family:Georgia text-6xl font-bold text-white">
+      <div className="def grid h-screen place-items-center
+                  text-6xl font-bold text-white">
         Masq
       </div>
     </div>
