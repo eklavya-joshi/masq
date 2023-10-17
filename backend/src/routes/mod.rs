@@ -1,3 +1,4 @@
+use axum::http::HeaderValue;
 use axum::response::Html;
 use axum::routing::get;
 use axum::{middleware::from_fn_with_state, Router};
@@ -30,6 +31,6 @@ pub async fn router(app_state: AppState) -> Router {
         .nest("/users", noauth_users_router(app_state.clone()).await)
         .layer(CookieManagerLayer::new())
         .route("/hello", get(|| async {Html("i love poop")}))
-        .layer(CorsLayer::very_permissive())
+        .layer(CorsLayer::very_permissive()) // ! REMOVE IN PRODUCTION
 
 }

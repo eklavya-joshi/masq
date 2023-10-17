@@ -9,8 +9,8 @@ pub mod models;
 pub async fn messages_router(app_state: AppState) -> Router {
 
     Router::new()
-        .route("/create/dm", post(create_dm))
-        .route("/find/inbox", get(find_inboxes))
+        .route("/new", post(create_dm))
+        .route("/inbox", get(find_inboxes))
         .route("/find/messages", get(find_messages))
         .route("/send/message", post(send_message))
         .with_state(app_state.clone())

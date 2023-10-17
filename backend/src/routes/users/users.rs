@@ -33,7 +33,12 @@ pub async fn create(
     let conn = &mut pool.acquire().await?;
 
     let token = create_user(conn, &payload.username, &payload.password).await?;
-    cookies.add(Cookie::new("token", token.to_string()));
+
+    let mut cookie = Cookie::new("jwt", token.to_string());
+    cookie.set_http_only(Some(false));
+    cookie.set_secure(true);
+    cookie.set_same_site(None);
+    cookies.add(cookie);
 
     log(Json(AuthResponse { token }), "/users/create")
 }
@@ -48,7 +53,12 @@ pub async fn login(
     let conn = &mut pool.acquire().await?;
 
     let token = verify_user(conn, &payload.username, &payload.password).await?;
-    cookies.add(Cookie::new("token", token.to_string()));
+
+    let mut cookie = Cookie::new("jwt", token.to_string());
+    cookie.set_http_only(Some(false));
+    cookie.set_secure(true);
+    cookie.set_same_site(None);
+    cookies.add(cookie);
 
     log(Json(AuthResponse { token }), "/users/login")
 
