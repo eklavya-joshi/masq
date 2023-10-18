@@ -1,10 +1,10 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
+import DmPage from "./components/DmPage/DmPage";
+import Dashboard from "./components/Dashboard/Dashboard";
 import LandingPage   from "./components/LandingPage/LandingPage";
 import LoginPage     from "./components/LoginRegisterPage/LoginPage";
-import Dashboard     from "./components/Dashboard/Dashboard";
-import DmPage        from "./components/DmPage/DmPage";
 
 export default function App() {
   return (
