@@ -1,11 +1,9 @@
 use std::env;
-
-
 use jsonwebtoken::{encode, Header, EncodingKey, decode, DecodingKey, Validation, Algorithm, get_current_timestamp};
 use serde::{Serialize, Deserialize};
 use dotenvy::dotenv;
 
-use crate::middleware::error::Result;
+use super::Result;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Claims {

@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::{
     database::schema::User,
-    api::error::{Error, Result},
+    api::{Error, Result},
     utils::pwd::{encrypt, decrypt}, middleware::jwt::create_token
 };
 

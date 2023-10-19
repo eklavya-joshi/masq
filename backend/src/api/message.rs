@@ -3,10 +3,9 @@ use serde::{Serialize, Deserialize};
 use sqlx::{PgConnection, query, query_as};
 use uuid::Uuid;
 
-use crate::{
-    database::schema::{Message, Inbox}, 
-    api::error::{Error, Result},
-};
+use crate::database::schema::{Message, Inbox};
+
+use super::{Error, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InboxInfo {

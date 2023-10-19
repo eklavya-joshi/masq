@@ -2,9 +2,9 @@ use axum::{http::Request, middleware::Next, response::Response, headers::{Author
 use sqlx::{query, PgPool};
 use tower_cookies::Cookies;
 
-use crate::middleware::error::{Error, Result};
-
-use super::jwt::verify_token;
+use super::{
+    Error, Result,
+    jwt::verify_token};
 
 pub async fn require_auth<T: std::fmt::Debug>(State(pool): State<PgPool>, cookies: Cookies, mut req: Request<T>, next: Next<T>) -> Result<Response> {
     

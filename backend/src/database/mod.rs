@@ -5,9 +5,7 @@ use std::env;
 pub mod schema;
 pub mod error;
 
-use crate::database::error::Result;
-
-use self::error::Error;
+use self::error::{Error, Result};
 
 pub async fn establish_connection() -> Result<PgConnection> {
     dotenv().ok();
