@@ -1,7 +1,7 @@
 use std::io::stdin;
 use backend::{
     database::establish_connection,
-    api::user::get_users,
+    api::user::find_unfiltered,
     api::Result
 };
 
@@ -16,7 +16,7 @@ async fn main() -> Result<()> {
     stdin().read_line(&mut name).unwrap();
     let name = name.trim_end().to_string();
 
-    println!("{:?}", get_users(connection, &name).await?);
+    println!("{:?}", find_unfiltered(connection, &name).await?);
 
     Ok(())
 

@@ -1,6 +1,6 @@
 use chrono::{Utc, NaiveDateTime};
 use serde::{Serialize, Deserialize};
-use sqlx::{PgConnection, query};
+use sqlx::{PgConnection, query, query_as};
 use uuid::Uuid;
 
 use crate::{
@@ -60,15 +60,9 @@ pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
 
 }
 
-pub async fn get_users(conn: &mut PgConnection, name: &str) -> Result<Vec<UserInfo>> {
+pub async fn find_users(conn: &mut PgConnection, name: &str, query_user_id: Uuid) -> Result<Vec<UserInfo>> {
 
-    let existing_usernames = query!(
-        r#"SELECT name, created FROM Users WHERE name iLIKE $1 LIMIT $2"#,
-        format!("%{name}%"),
-        25
-    )
-    .fetch_all(conn.as_mut())
-    .await?;
+    let existing_usernames = find_filtered(conn, name, query_user_id).await?;
 
     if existing_usernames.is_empty() {
         return Ok(vec![]);
@@ -137,4 +131,27 @@ pub async fn logout_user(conn: &mut PgConnection, name: String) -> Result<bool> 
     .await?;
 
     Ok(true)
+}
+
+pub async fn find_unfiltered(conn: &mut PgConnection, name: &str) -> Result<Vec<UserInfo>> {
+    query_as!(
+        UserInfo,
+        r#"SELECT name, created FROM Users WHERE name iLIKE $1 LIMIT $2"#,
+        format!("%{name}%"),
+        25
+    )
+    .fetch_all(conn.as_mut())
+    .await.map_err(|e| e.into())
+}
+
+pub async fn find_filtered(conn: &mut PgConnection, name: &str, query_user_id: Uuid) -> Result<Vec<UserInfo>> {
+    query_as!(
+        UserInfo,
+        r#"SELECT name, created FROM Users WHERE name iLIKE $1 AND id <> $2 LIMIT $3"#,
+        format!("%{name}%"),
+        query_user_id,
+        25
+    )
+    .fetch_all(conn.as_mut())
+    .await.map_err(|e| e.into())
 }

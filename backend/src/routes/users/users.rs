@@ -1,9 +1,10 @@
-use axum::{extract::{State, Query}, Json};
+use axum::{extract::{State, Query}, Json, Extension};
 use axum_macros::debug_handler;
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::{
-    api::user::{get_users, create_user, logout_user, verify_user},
+    api::user::{find_users, create_user, logout_user, verify_user},
     routes::error::{Result, log}
 };
 
@@ -11,13 +12,14 @@ use super::models::*;
 
 #[debug_handler]
 pub async fn find(
+    Extension(user): Extension<Uuid>,
     State(pool): State<PgPool>, 
     Query(params): Query<FindUsersQuery>,
 ) -> Result<Json<FindUsersResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/find");
 
     let conn = &mut pool.acquire().await?;
-    let user_list = get_users(conn, &params.name).await?;
+    let user_list = find_users(conn, &params.name, user).await?;
     
     log(Json(FindUsersResponse { users: user_list }), "/users/find")
 }
