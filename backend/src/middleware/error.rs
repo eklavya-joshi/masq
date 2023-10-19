@@ -1,4 +1,4 @@
-use axum::response::{Response, IntoResponse};
+use axum::response::{IntoResponse, Response};
 use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 use thiserror::Error;
@@ -19,7 +19,7 @@ pub enum Error {
     JWTError(#[serde_as(as = "DisplayFromStr")] jsonwebtoken::errors::Error),
     // -- Client side
     #[error("Unauthorised")]
-    Unauthorised
+    Unauthorised,
 }
 
 impl From<jsonwebtoken::errors::Error> for Error {
@@ -35,8 +35,8 @@ impl From<sqlx::error::Error> for Error {
 }
 
 impl IntoResponse for Error {
-	fn into_response(self) -> Response {
-		let e: routes::error::Error = self.into();
+    fn into_response(self) -> Response {
+        let e: routes::error::Error = self.into();
         e.into_response()
-	}
+    }
 }

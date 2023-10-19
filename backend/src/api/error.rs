@@ -2,7 +2,7 @@ use serde::Serialize;
 use serde_with::{serde_as, DisplayFromStr};
 use thiserror::Error;
 
-use crate::{middleware, database};
+use crate::{database, middleware};
 
 pub type Result<T> = core::result::Result<T, Error>;
 
@@ -29,7 +29,7 @@ pub enum Error {
     DMAlreadyExists(String),
     // -- Module Error
     #[error("Middleware error")]
-    Middleware(middleware::Error)
+    Middleware(middleware::Error),
 }
 
 impl From<sqlx::Error> for Error {

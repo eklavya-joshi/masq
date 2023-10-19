@@ -9,7 +9,7 @@ pub type Result<T> = core::result::Result<T, Error>;
 pub enum Error {
     // -- Server Error
     #[error("Database error")]
-    SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error)
+    SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
 }
 
 impl From<sqlx::error::Error> for Error {

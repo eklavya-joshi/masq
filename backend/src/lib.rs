@@ -1,6 +1,6 @@
-pub mod database;
 pub mod api;
-pub mod routes;
-pub mod middleware;
-pub mod utils;
+pub mod database;
 pub mod error;
+pub mod middleware;
+pub mod routes;
+pub mod utils;

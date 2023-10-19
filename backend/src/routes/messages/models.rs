@@ -1,26 +1,26 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 use crate::{api::message::InboxInfo, database::schema::Message};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateDmResponse {
-    pub dm: Uuid
+    pub dm: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SendMessageResponse {
-    pub message: Uuid
+    pub message: Uuid,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FindInboxResponse {
-    pub inboxes: Vec<InboxInfo>
+    pub inboxes: Vec<InboxInfo>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FindMessagesResponse {
-    pub messages: Vec<Message>
+    pub messages: Vec<Message>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -31,15 +31,13 @@ pub struct CreateDmPayload {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SendMessagePayload {
     pub inbox: Uuid,
-    pub content: String
+    pub content: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct GetInboxesQuery {
-
-}
+pub struct GetInboxesQuery {}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GetMessagesQuery {
-    pub inbox: Uuid
+    pub inbox: Uuid,
 }

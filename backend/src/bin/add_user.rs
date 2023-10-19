@@ -1,9 +1,5 @@
+use backend::{api::user::create_user, api::Result, database::establish_connection};
 use std::io::stdin;
-use backend::{
-    database::establish_connection,
-    api::user::create_user,
-    api::Result
-};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -24,5 +20,4 @@ async fn main() -> Result<()> {
     println!("{:?}", create_user(connection, &name, &pass).await?);
 
     Ok(())
-
 }

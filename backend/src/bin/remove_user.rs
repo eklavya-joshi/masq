@@ -1,10 +1,5 @@
+use backend::{api::user::remove_user, api::Result, database::establish_connection};
 use std::io::stdin;
-use backend::{
-    database::establish_connection,
-    api::user::remove_user,
-    api::Result
-};
-
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -20,5 +15,4 @@ async fn main() -> Result<()> {
     println!("{:?}", remove_user(connection, &id_str).await?);
 
     Ok(())
-
 }

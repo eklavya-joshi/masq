@@ -1,44 +1,42 @@
-use chrono::{Utc, NaiveDateTime};
-use serde::{Serialize, Deserialize};
-use sqlx::{PgConnection, query, query_as};
+use chrono::{NaiveDateTime, Utc};
+use serde::{Deserialize, Serialize};
+use sqlx::{query, query_as, PgConnection};
 use uuid::Uuid;
 
 use crate::{
-    database::schema::User,
     api::{Error, Result},
-    utils::pwd::{encrypt, decrypt}, middleware::jwt::create_token
+    database::schema::User,
+    middleware::jwt::create_token,
+    utils::pwd::{decrypt, encrypt},
 };
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct UserInfo {
     pub name: String,
-    pub created: NaiveDateTime
+    pub created: NaiveDateTime,
 }
 
 pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<String> {
-
     let user_id: Uuid = Uuid::new_v4();
 
-    let u = query!(
-        r#"SELECT * FROM Users WHERE name=$1"#,
-        name
-    )
-    .fetch_optional(conn.as_mut())
-    .await?;
+    let u = query!(r#"SELECT * FROM Users WHERE name=$1"#, name)
+        .fetch_optional(conn.as_mut())
+        .await?;
 
-    if u.is_some() {return Err(Error::UsernameNotAvailable(name.to_owned()));}
+    if u.is_some() {
+        return Err(Error::UsernameNotAvailable(name.to_owned()));
+    }
 
     let crypt = encrypt(&pass).await;
 
-    let new_user = User 
-    { 
-        id: user_id, 
+    let new_user = User {
+        id: user_id,
         name: name.to_owned(),
-        salt: Some(crypt.salt), 
-        pass: crypt.hash, 
-        created: Utc::now().naive_local(), 
+        salt: Some(crypt.salt),
+        pass: crypt.hash,
+        created: Utc::now().naive_local(),
         active: true,
-        token: None
+        token: None,
     };
 
     let token = create_token(&new_user.name)?;
@@ -57,11 +55,13 @@ pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
     .await?;
 
     Ok(token)
-
 }
 
-pub async fn find_users(conn: &mut PgConnection, name: &str, query_user_id: Uuid) -> Result<Vec<UserInfo>> {
-
+pub async fn find_users(
+    conn: &mut PgConnection,
+    name: &str,
+    query_user_id: Uuid,
+) -> Result<Vec<UserInfo>> {
     let existing_usernames = find_filtered(conn, name, query_user_id).await?;
 
     if existing_usernames.is_empty() {
@@ -70,7 +70,10 @@ pub async fn find_users(conn: &mut PgConnection, name: &str, query_user_id: Uuid
 
     let mut user_list: Vec<UserInfo> = vec![];
     for user in existing_usernames {
-        user_list.push(UserInfo {name: user.name, created: user.created});
+        user_list.push(UserInfo {
+            name: user.name,
+            created: user.created,
+        });
     }
 
     Ok(user_list)
@@ -82,19 +85,16 @@ pub async fn remove_user(conn: &mut PgConnection, id: &str) -> Result<bool> {
         Uuid::parse_str(&id).ok().unwrap()
     )
     .execute(conn)
-    .await.map(|_| true)
+    .await
+    .map(|_| true)
     .map_err(|e| e.into())
 }
 
 pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<String> {
-
-    let user = query!(
-        r#"SELECT * FROM Users WHERE name=$1"#,
-        name,
-    )
-    .fetch_one(conn.as_mut())
-    .await
-    .or(Err(Error::UserNotFound(name.to_string())))?;
+    let user = query!(r#"SELECT * FROM Users WHERE name=$1"#, name,)
+        .fetch_one(conn.as_mut())
+        .await
+        .or(Err(Error::UserNotFound(name.to_string())))?;
 
     if !decrypt(&user.salt.unwrap(), &user.pass, &pass).await {
         return Err(Error::InvalidPassword);
@@ -114,21 +114,14 @@ pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
 }
 
 pub async fn logout_user(conn: &mut PgConnection, name: String) -> Result<bool> {
+    let user = query!(r#"SELECT id FROM Users WHERE name=$1"#, name,)
+        .fetch_one(conn.as_mut())
+        .await
+        .or(Err(Error::UserNotFound(name.to_string())))?;
 
-    let user = query!(
-        r#"SELECT id FROM Users WHERE name=$1"#,
-        name,
-    )
-    .fetch_one(conn.as_mut())
-    .await
-    .or(Err(Error::UserNotFound(name.to_string())))?;
-
-    query!(
-        r#"UPDATE Users SET token = NULL WHERE id = $1"#,
-        user.id
-    )
-    .execute(conn)
-    .await?;
+    query!(r#"UPDATE Users SET token = NULL WHERE id = $1"#, user.id)
+        .execute(conn)
+        .await?;
 
     Ok(true)
 }
@@ -141,10 +134,15 @@ pub async fn find_unfiltered(conn: &mut PgConnection, name: &str) -> Result<Vec<
         25
     )
     .fetch_all(conn.as_mut())
-    .await.map_err(|e| e.into())
+    .await
+    .map_err(|e| e.into())
 }
 
-pub async fn find_filtered(conn: &mut PgConnection, name: &str, query_user_id: Uuid) -> Result<Vec<UserInfo>> {
+pub async fn find_filtered(
+    conn: &mut PgConnection,
+    name: &str,
+    query_user_id: Uuid,
+) -> Result<Vec<UserInfo>> {
     query_as!(
         UserInfo,
         r#"SELECT name, created FROM Users WHERE name iLIKE $1 AND id <> $2 LIMIT $3"#,
@@ -153,5 +151,6 @@ pub async fn find_filtered(conn: &mut PgConnection, name: &str, query_user_id: U
         25
     )
     .fetch_all(conn.as_mut())
-    .await.map_err(|e| e.into())
+    .await
+    .map_err(|e| e.into())
 }

@@ -13,7 +13,7 @@ pub enum Error {
     #[error("Cannot start server")]
     CannotStartServer,
     #[error("Database error")]
-    SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error)
+    SqlxError(#[serde_as(as = "DisplayFromStr")] sqlx::error::Error),
 }
 
 impl From<database::error::Error> for Error {

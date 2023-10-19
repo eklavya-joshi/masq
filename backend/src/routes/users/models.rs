@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 use crate::api::user::UserInfo;
 
@@ -36,5 +36,5 @@ pub struct LogoutPayload {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LogoutResponse {
-    pub result: String
+    pub result: String,
 }

@@ -1,29 +1,29 @@
 use chrono::Utc;
-use serde::{Serialize, Deserialize};
-use sqlx::{PgConnection, query, query_as};
+use serde::{Deserialize, Serialize};
+use sqlx::{query, query_as, PgConnection};
 use uuid::Uuid;
 
-use crate::database::schema::{Message, Inbox};
+use crate::database::schema::{Inbox, Message};
 
 use super::{Error, Result};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct InboxInfo {
-    pub inbox: Uuid
+    pub inbox: Uuid,
 }
 
-pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, content: &str) -> Result<Uuid> {
-
-    let author_name = query!(
-        r#"SELECT name FROM Users WHERE id=$1"#, 
-        author)
+pub async fn send_message(
+    conn: &mut PgConnection,
+    author: Uuid,
+    inbox: Uuid,
+    content: &str,
+) -> Result<Uuid> {
+    let author_name = query!(r#"SELECT name FROM Users WHERE id=$1"#, author)
         .fetch_one(conn.as_mut())
         .await
         .or(Err(Error::UserNotFound(author.to_string())))?;
 
-    query!(
-        r#"SELECT * FROM Inbox WHERE id=$1"#, 
-        inbox)
+    query!(r#"SELECT * FROM Inbox WHERE id=$1"#, inbox)
         .fetch_one(conn.as_mut())
         .await
         .or(Err(Error::InboxNotFound(inbox.to_string())))?;
@@ -58,34 +58,33 @@ pub async fn send_message(conn: &mut PgConnection, author: Uuid, inbox: Uuid, co
 pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Result<Uuid> {
     // TODO: Can't create existing DMs
 
-    query!(
-        r#"SELECT * FROM Users WHERE id=$1"#,
-        id)
+    query!(r#"SELECT * FROM Users WHERE id=$1"#, id)
         .fetch_one(conn.as_mut())
         .await
         .or(Err(Error::UserNotFound(id.to_string())))?;
 
-    let target_id = query!(
-        r#"SELECT * FROM Users WHERE name=$1"#,
-        target)
+    let target_id = query!(r#"SELECT * FROM Users WHERE name=$1"#, target)
         .fetch_one(conn.as_mut())
         .await
         .or(Err(Error::UserNotFound(target.to_string())))?
         .id;
 
-    if id == target_id { return Err(Error::NoSelfDm) }
+    if id == target_id {
+        return Err(Error::NoSelfDm);
+    }
 
     let inbox: Inbox = Inbox {
         id: Uuid::new_v4(),
         created: Utc::now().naive_local(),
-        active: true
+        active: true,
     };
 
     query!(
         r#"INSERT INTO Inbox(id, created)
         VALUES($1, $2)"#,
         inbox.id,
-        inbox.created)
+        inbox.created
+    )
     .execute(conn.as_mut())
     .await?;
 
@@ -94,9 +93,11 @@ pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Resul
         (recipient1=$1 AND recipient2=$2) OR
         (recipient1=$2 AND recipient2=$1)"#,
         id,
-        target_id)
+        target_id
+    )
     .fetch_optional(conn.as_mut())
-    .await? {
+    .await?
+    {
         Some(x) => return Err(Error::DMAlreadyExists(x.inbox.to_string())),
         None => {}
     };
@@ -106,7 +107,8 @@ pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Resul
         VALUES($1, $2, $3)"#,
         inbox.id,
         id,
-        target_id)
+        target_id
+    )
     .execute(conn.as_mut())
     .await?;
 
@@ -114,13 +116,13 @@ pub async fn create_dm(conn: &mut PgConnection, id: Uuid, target: &str) -> Resul
 }
 
 pub async fn find_inboxes(conn: &mut PgConnection, id: Uuid) -> Result<Vec<InboxInfo>> {
-
     let mut inboxes: Vec<InboxInfo> = vec![];
 
     let mut group_inboxes = query_as!(
         InboxInfo,
         r#"SELECT inbox FROM InboxRecipients WHERE recipient=$1"#,
-        id)
+        id
+    )
     .fetch_all(conn.as_mut())
     .await?;
 
@@ -129,7 +131,8 @@ pub async fn find_inboxes(conn: &mut PgConnection, id: Uuid) -> Result<Vec<Inbox
     let mut dm_inboxes = query_as!(
         InboxInfo,
         r#"SELECT inbox FROM InboxDmRecipients WHERE recipient1=$1 OR recipient2=$1"#,
-        id)
+        id
+    )
     .fetch_all(conn.as_mut())
     .await?;
 
@@ -139,13 +142,9 @@ pub async fn find_inboxes(conn: &mut PgConnection, id: Uuid) -> Result<Vec<Inbox
 }
 
 pub async fn find_messages(conn: &mut PgConnection, id: Uuid) -> Result<Vec<Message>> {
-
-    let messages = query_as!(
-        Message,
-        r#"SELECT * from Messages WHERE inbox=$1"#,
-        id)
-    .fetch_all(conn.as_mut())
-    .await?;
+    let messages = query_as!(Message, r#"SELECT * from Messages WHERE inbox=$1"#, id)
+        .fetch_all(conn.as_mut())
+        .await?;
 
     Ok(messages)
 }

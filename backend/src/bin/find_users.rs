@@ -1,9 +1,5 @@
+use backend::{api::user::find_unfiltered, api::Result, database::establish_connection};
 use std::io::stdin;
-use backend::{
-    database::establish_connection,
-    api::user::find_unfiltered,
-    api::Result
-};
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -19,5 +15,4 @@ async fn main() -> Result<()> {
     println!("{:?}", find_unfiltered(connection, &name).await?);
 
     Ok(())
-
 }
