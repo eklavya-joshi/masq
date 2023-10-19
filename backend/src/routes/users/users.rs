@@ -1,6 +1,5 @@
 use axum::{extract::{State, Query}, Json};
 use axum_macros::debug_handler;
-use tower_cookies::{Cookies, Cookie};
 use sqlx::PgPool;
 
 use crate::{
@@ -25,7 +24,6 @@ pub async fn find(
 
 #[debug_handler]
 pub async fn create(
-    cookies: Cookies,
     State(pool): State<PgPool>, 
     Json(payload): Json<CreateUserPayload>) -> Result<Json<AuthResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/create");
@@ -39,7 +37,6 @@ pub async fn create(
 
 #[debug_handler]
 pub async fn login(
-    cookies: Cookies,
     State(pool): State<PgPool>, 
     Json(payload): Json<LoginPayload>) -> Result<Json<AuthResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/login");

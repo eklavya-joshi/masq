@@ -121,9 +121,17 @@ pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
 
 pub async fn logout_user(conn: &mut PgConnection, name: String) -> Result<bool> {
 
+    let user = query!(
+        r#"SELECT id FROM Users WHERE name=$1"#,
+        name,
+    )
+    .fetch_one(conn.as_mut())
+    .await
+    .or(Err(Error::UserNotFound(name.to_string())))?;
+
     query!(
-        r#"UPDATE Users SET token = NULL WHERE name = $1"#,
-        name
+        r#"UPDATE Users SET token = NULL WHERE id = $1"#,
+        user.id
     )
     .execute(conn)
     .await?;
