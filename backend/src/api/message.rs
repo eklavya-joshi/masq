@@ -12,6 +12,13 @@ pub struct InboxInfo {
     pub inbox: Uuid,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct FilteredMessage {
+    pub author_name: String,
+    pub content: String,
+    pub created: String
+}
+
 pub async fn send_message(
     conn: &mut PgConnection,
     author: Uuid,
@@ -147,4 +154,22 @@ pub async fn find_messages(conn: &mut PgConnection, id: Uuid) -> Result<Vec<Mess
         .await?;
 
     Ok(messages)
+}
+
+pub async fn find_filtered_messages(conn: &mut PgConnection, id: Uuid) -> Result<Vec<FilteredMessage>> {
+    let messages = find_messages(conn, id).await?;
+
+    let mut filtered = vec![];
+
+    for message in messages {
+        let created = message.created.format("%l:%M%p");
+        filtered.push(FilteredMessage {
+            author_name: message.author_name,
+            content: message.content,
+            created: format!("{created}")
+        });
+    }
+
+    Ok(filtered)
+
 }

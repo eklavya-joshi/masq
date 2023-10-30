@@ -55,7 +55,7 @@ pub async fn find_messages(
     println!("->> {:<18} - {}", "HANDLER", "/find/messages");
 
     let conn = &mut pool.acquire().await?;
-    let messages = message::find_messages(conn, params.inbox).await?;
+    let messages = message::find_filtered_messages(conn, params.inbox).await?;
 
     log(Json(FindMessagesResponse { messages }), "/find/messages")
 }

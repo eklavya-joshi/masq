@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{api::message::InboxInfo, database::schema::Message};
+use crate::api::message::{InboxInfo, FilteredMessage};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CreateDmResponse {
@@ -20,7 +20,7 @@ pub struct FindInboxResponse {
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct FindMessagesResponse {
-    pub messages: Vec<Message>,
+    pub messages: Vec<FilteredMessage>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
