@@ -5,6 +5,8 @@ pub mod middleware;
 pub mod routes;
 pub mod utils;
 
+use std::{sync::Arc, collections::HashMap};
+
 use crate::{
     database::get_connection_pool,
     error::Result,
@@ -14,11 +16,12 @@ use crate::{
 #[tokio::main]
 async fn main() -> Result<()> {
     let pool = get_connection_pool().await?;
-    let app_state = AppState { pool };
+    let tx_map = HashMap::new();
+
+    let app_state = Arc::new(AppState { pool, tx_map });
 
     let app = router(app_state).await;
 
-    // run it with hyper on localhost:3000
     axum::Server::bind(&"0.0.0.0:8080".parse().unwrap())
         .serve(app.into_make_service())
         .await

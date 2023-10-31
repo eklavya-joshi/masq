@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::routes::messages::messages::{create_dm, find_inboxes, find_messages, send_message};
 use axum::{
     routing::{get, post},
@@ -9,7 +11,7 @@ use super::AppState;
 pub mod messages;
 pub mod models;
 
-pub async fn messages_router(app_state: AppState) -> Router {
+pub async fn messages_router(app_state: Arc<AppState>) -> Router {
     Router::new()
         .route("/new", post(create_dm))
         .route("/inbox", get(find_inboxes))

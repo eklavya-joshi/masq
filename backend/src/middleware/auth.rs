@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use axum::{
     extract::State,
     headers::{authorization::Bearer, Authorization, HeaderMapExt},
@@ -5,13 +7,15 @@ use axum::{
     middleware::Next,
     response::Response,
 };
-use sqlx::{query, PgPool};
+use sqlx::query;
 use tower_cookies::Cookies;
+
+use crate::routes::AppState;
 
 use super::{jwt::verify_token, Error, Result};
 
 pub async fn require_auth<T: std::fmt::Debug>(
-    State(pool): State<PgPool>,
+    State(state): State<Arc<AppState>>,
     cookies: Cookies,
     mut req: Request<T>,
     next: Next<T>,
@@ -23,7 +27,7 @@ pub async fn require_auth<T: std::fmt::Debug>(
         .map(|c| c.value().to_string())
         .ok_or(Error::InvalidToken)?;
 
-    let conn = &mut pool.acquire().await?;
+    let conn = &mut state.pool.acquire().await?;
 
     let user = query!(r#"SELECT * FROM Users WHERE token=$1"#, token)
         .fetch_optional(conn.as_mut())

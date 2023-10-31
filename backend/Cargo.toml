@@ -7,8 +7,9 @@ edition = "2021"
 
 [dependencies]
 thiserror = "1.0.49"
-axum = { version = "0.6.20", features = ["headers", "macros"]}
+axum = { version = "0.6.20", features = ["headers", "macros", "ws"]}
 sqlx = { version = "0.7.2", features = ["postgres", "runtime-tokio", "uuid", "chrono"]}
+futures = "0.3"
 tokio = { version = "1.32.0", features = ["full"]}
 tower-cookies = { version = "0.9.0", features = ["axum-core"]}
 tower-http = { version = "0.4.4", features = ["cors"] }
