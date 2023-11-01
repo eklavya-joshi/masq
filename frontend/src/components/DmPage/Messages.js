@@ -3,26 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Axios from "axios";
 
-export default function UserList() {
-
-    const params = useParams();
-
-    const [messages, setMessages] = useState([]);
-
-    const fetchMessages = async () => {
-        console.log(params)
-        const { data } = await Axios.get(
-            "http://localhost:8080/messages/find?inbox=" + params.id, {
-            withCredentials: true,
-        },
-        );
-        const messages = data.messages;
-        setMessages(messages);
-    };
-
-    useEffect(() => {
-        fetchMessages();
-    }, []);
+export default function UserList({messages, setMessages}) {
 
     const displayMessages = () => {
         return (
@@ -44,7 +25,7 @@ export default function UserList() {
     }
 
     return (
-        <div className="flex flex-col place-items-left">
+        <div className="flex flex-col place-items-left h-max overflow-auto scroll-smooth">
             {displayMessages()}
         </div>
     )

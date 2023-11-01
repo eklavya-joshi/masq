@@ -1,7 +1,11 @@
 import React from "react";
 import Sidebar from "./Sidebar";
+import aes from "../../aes";
 
 export default function LandingPage() {
+
+  aes();
+
   return (
   <>
     <div className="w-screen h-screen bg-primary">

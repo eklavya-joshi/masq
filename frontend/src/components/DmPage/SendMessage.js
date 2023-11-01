@@ -3,15 +3,15 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Axios from "axios";
 
-export default function SendMessage() {
+export default function SendMessage({websocket, messageSent, setMessageSent}) {
 
     const params = useParams();
 
     const [messageContent, setMessageContent] = useState("");
-    const [messageSent, setMessageSent] = useState(0);
 
     const handleSendMessage = async (e) => {
         e.preventDefault();
+        websocket(JSON.stringify({ inbox: params.id, content: messageContent }))
         const { data } = await Axios.post(
             "http://localhost:8080/messages/send",
             {
@@ -22,6 +22,7 @@ export default function SendMessage() {
         );
         console.log(data);
         setMessageSent(messageSent + 1);
+        setMessageContent("");
     }
 
     return (
