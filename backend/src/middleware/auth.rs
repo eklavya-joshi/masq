@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::{
     extract::State,
     headers::{authorization::Bearer, Authorization, HeaderMapExt},
@@ -15,7 +13,7 @@ use crate::routes::AppState;
 use super::{jwt::verify_token, Error, Result};
 
 pub async fn require_auth<T: std::fmt::Debug>(
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     cookies: Cookies,
     mut req: Request<T>,
     next: Next<T>,

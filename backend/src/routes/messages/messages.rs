@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::{
     extract::{Query, State},
     Extension, Json,
@@ -17,7 +15,7 @@ use super::models::*;
 #[debug_handler]
 pub async fn create_dm(
     Extension(user): Extension<Uuid>,
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Json(payload): Json<CreateDmPayload>,
 ) -> Result<Json<CreateDmResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/create/dm");
@@ -37,7 +35,7 @@ pub async fn create_dm(
 #[debug_handler]
 pub async fn find_inboxes(
     Extension(user): Extension<Uuid>,
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Query(_params): Query<GetInboxesQuery>,
 ) -> Result<Json<FindInboxResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/find/inbox");
@@ -50,7 +48,7 @@ pub async fn find_inboxes(
 
 #[debug_handler]
 pub async fn find_messages(
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Query(params): Query<GetMessagesQuery>,
 ) -> Result<Json<FindMessagesResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/find/messages");
@@ -64,7 +62,7 @@ pub async fn find_messages(
 #[debug_handler]
 pub async fn send_message(
     Extension(user): Extension<Uuid>,
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Json(payload): Json<SendMessagePayload>,
 ) -> Result<Json<SendMessageResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/send/message");

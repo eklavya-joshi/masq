@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use axum::{
     extract::{Query, State},
     Extension, Json,
@@ -17,7 +15,7 @@ use super::models::*;
 #[debug_handler]
 pub async fn find(
     Extension(user): Extension<Uuid>,
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Query(params): Query<FindUsersQuery>,
 ) -> Result<Json<FindUsersResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/find");
@@ -30,7 +28,7 @@ pub async fn find(
 
 #[debug_handler]
 pub async fn create(
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Json(payload): Json<CreateUserPayload>,
 ) -> Result<Json<AuthResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/create");
@@ -44,7 +42,7 @@ pub async fn create(
 
 #[debug_handler]
 pub async fn login(
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Json(payload): Json<LoginPayload>,
 ) -> Result<Json<AuthResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/login");
@@ -58,7 +56,7 @@ pub async fn login(
 
 #[debug_handler]
 pub async fn logout(
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Json(payload): Json<LogoutPayload>,
 ) -> Result<Json<LogoutResponse>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/logout");

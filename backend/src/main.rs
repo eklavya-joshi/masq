@@ -20,7 +20,7 @@ async fn main() -> Result<()> {
     let pool = get_connection_pool().await?;
     let tx_map = Arc::new(RwLock::new(HashMap::new()));
 
-    let app_state = Arc::new(AppState { pool, tx_map });
+    let app_state = AppState { pool, tx_map };
 
     let app = router(app_state).await;
 

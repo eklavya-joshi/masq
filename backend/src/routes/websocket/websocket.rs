@@ -1,6 +1,4 @@
-use std::sync::Arc;
-
-use axum::{response::IntoResponse, extract::{State, ws::{WebSocket, WebSocketUpgrade, Message}, Query, Path}, Extension};
+use axum::{response::IntoResponse, extract::{State, ws::{WebSocket, WebSocketUpgrade, Message}, Path}, Extension};
 use futures::{sink::SinkExt, stream::StreamExt};
 use tokio::sync::broadcast::channel;
 use uuid::Uuid;
@@ -10,7 +8,7 @@ use crate::routes::AppState;
 pub async fn websocket_handler(
     Extension(user): Extension<Uuid>,
     ws: WebSocketUpgrade,
-    State(state): State<Arc<AppState>>,
+    State(state): State<AppState>,
     Path(id): Path<Uuid>
 ) -> impl IntoResponse {
     println!("->> {:<18} - {}", "HANDLER", "/ws/inbox");
@@ -21,17 +19,17 @@ pub async fn websocket_handler(
     ws.on_upgrade(move |socket| websocket(user, inbox, socket, state))
 }
 
-pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: Arc<AppState>) {
+pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: AppState) {
     let (mut sender, mut receiver) = stream.split();
 
     {
-        if !state.tx_map.clone().clone().read().await.contains_key(&inbox) {
+        if !state.tx_map.clone().read().await.contains_key(&inbox) {
             let (tx, _rx) = channel(100);
-            state.tx_map.clone().clone().write().await.insert(inbox.clone(), tx);
+            state.tx_map.clone().write().await.insert(inbox.clone(), tx);
         }
     }
 
-    let map = state.tx_map.clone().clone();
+    let map = state.tx_map.clone();
     let read_map = map.read().await;
     let tx = read_map.get(&inbox).unwrap();
 
@@ -66,7 +64,7 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: Arc<Ap
     let _ = tx.send(msg);
 
     if tx.receiver_count() == 0 {
-        state.tx_map.clone().clone().write().await.remove(&inbox);
+        state.tx_map.clone().write().await.remove(&inbox);
     }
 
 }

@@ -30,7 +30,7 @@ pub struct AppState {
     pub tx_map: Arc<RwLock<HashMap<Uuid, Sender<String>>>>
 }
 
-pub async fn router(app_state: Arc<AppState>) -> Router {
+pub async fn router(app_state: AppState) -> Router {
     Router::new()
         .nest("/users", auth_users_router(app_state.clone()).await)
         .nest("/messages", messages_router(app_state.clone()).await)
