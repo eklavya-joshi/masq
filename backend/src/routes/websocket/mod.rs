@@ -9,6 +9,6 @@ pub mod websocket;
 
 pub async fn websocket_router(app_state: Arc<AppState>) -> Router {
     Router::new()
-        .route("/inbox", get(websocket_handler))
+        .route("/inbox/:id", get(websocket_handler))
         .with_state(app_state.clone())
 }

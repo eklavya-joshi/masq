@@ -6,6 +6,7 @@ use axum::routing::get;
 use axum::{middleware::from_fn_with_state, Router};
 use axum_macros::FromRef;
 use sqlx::PgPool;
+use tokio::sync::RwLock;
 use tokio::sync::broadcast::Sender;
 use tower_cookies::CookieManagerLayer;
 use tower_http::cors::CorsLayer;
@@ -26,7 +27,7 @@ use self::websocket::websocket_router;
 #[derive(Clone, FromRef)]
 pub struct AppState {
     pub pool: PgPool,
-    pub tx_map: HashMap<Uuid, Sender<String>>
+    pub tx_map: Arc<RwLock<HashMap<Uuid, Sender<String>>>>
 }
 
 pub async fn router(app_state: Arc<AppState>) -> Router {

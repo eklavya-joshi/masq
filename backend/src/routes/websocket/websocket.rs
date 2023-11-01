@@ -1,38 +1,39 @@
 use std::sync::Arc;
 
-use axum::{response::IntoResponse, extract::{State, ws::{WebSocket, WebSocketUpgrade, Message}, Query}, Extension};
+use axum::{response::IntoResponse, extract::{State, ws::{WebSocket, WebSocketUpgrade, Message}, Query, Path}, Extension};
 use futures::{sink::SinkExt, stream::StreamExt};
-use serde::{Serialize, Deserialize};
 use tokio::sync::broadcast::channel;
 use uuid::Uuid;
 
 use crate::routes::AppState;
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct InboxSocketPayload {
-    pub inbox: Uuid,
-}
-
 pub async fn websocket_handler(
     Extension(user): Extension<Uuid>,
     ws: WebSocketUpgrade,
     State(state): State<Arc<AppState>>,
-    Query(req): Query<InboxSocketPayload>
+    Path(id): Path<Uuid>
 ) -> impl IntoResponse {
+    println!("->> {:<18} - {}", "HANDLER", "/ws/inbox");
+
     let user = user.clone();
-    let inbox = req.inbox.clone();
+    let inbox = id.clone();
+
     ws.on_upgrade(move |socket| websocket(user, inbox, socket, state))
 }
 
 pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: Arc<AppState>) {
     let (mut sender, mut receiver) = stream.split();
 
-    if !state.tx_map.contains_key(&inbox) {
-        let (tx, _rx) = channel(100);
-        state.tx_map.clone().insert(inbox.clone(), tx);
+    {
+        if !state.tx_map.clone().clone().read().await.contains_key(&inbox) {
+            let (tx, _rx) = channel(100);
+            state.tx_map.clone().clone().write().await.insert(inbox.clone(), tx);
+        }
     }
 
-    let tx = state.tx_map.get(&inbox).unwrap();
+    let map = state.tx_map.clone().clone();
+    let read_map = map.read().await;
+    let tx = read_map.get(&inbox).unwrap();
 
     let mut rx = tx.subscribe();
 
@@ -65,7 +66,7 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: Arc<Ap
     let _ = tx.send(msg);
 
     if tx.receiver_count() == 0 {
-        state.tx_map.clone().remove(&inbox);
+        state.tx_map.clone().clone().write().await.remove(&inbox);
     }
 
 }

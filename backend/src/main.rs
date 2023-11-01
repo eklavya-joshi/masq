@@ -7,6 +7,8 @@ pub mod utils;
 
 use std::{sync::Arc, collections::HashMap};
 
+use tokio::sync::RwLock;
+
 use crate::{
     database::get_connection_pool,
     error::Result,
@@ -16,7 +18,7 @@ use crate::{
 #[tokio::main]
 async fn main() -> Result<()> {
     let pool = get_connection_pool().await?;
-    let tx_map = HashMap::new();
+    let tx_map = Arc::new(RwLock::new(HashMap::new()));
 
     let app_state = Arc::new(AppState { pool, tx_map });
 
