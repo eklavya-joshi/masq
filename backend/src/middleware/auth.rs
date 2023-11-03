@@ -34,6 +34,7 @@ pub async fn require_auth<T: std::fmt::Debug>(
     let Some(_) = user else {
         return Err(Error::Unauthorised);
     };
+    
     let user = user.unwrap();
 
     verify_token(&token)?;

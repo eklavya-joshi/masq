@@ -24,10 +24,11 @@ pub struct LoginPayload {
     pub password: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct AuthResponse {
-    pub token: String,
-}
+// #[derive(Debug, Clone, Serialize, Deserialize)]
+// pub struct AuthResponse {
+//     pub user_id: Uuid,
+//     pub token: String,
+// }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct LogoutPayload {

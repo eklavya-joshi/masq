@@ -16,7 +16,13 @@ pub struct UserInfo {
     pub created: NaiveDateTime,
 }
 
-pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<String> {
+#[derive(Debug, Serialize, Deserialize)]
+pub struct AuthUserInfo {
+    pub id: Uuid,
+    pub token: String
+}
+
+pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<AuthUserInfo> {
     let user_id: Uuid = Uuid::new_v4();
 
     let u = query!(r#"SELECT * FROM Users WHERE name=$1"#, name)
@@ -54,7 +60,7 @@ pub async fn create_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
     .execute(conn)
     .await?;
 
-    Ok(token)
+    Ok(AuthUserInfo { id: new_user.id, token })
 }
 
 pub async fn find_users(
@@ -90,7 +96,7 @@ pub async fn remove_user(conn: &mut PgConnection, id: &str) -> Result<bool> {
     .map_err(|e| e.into())
 }
 
-pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<String> {
+pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Result<AuthUserInfo> {
     let user = query!(r#"SELECT * FROM Users WHERE name=$1"#, name,)
         .fetch_one(conn.as_mut())
         .await
@@ -110,7 +116,7 @@ pub async fn verify_user(conn: &mut PgConnection, name: &str, pass: &str) -> Res
     .execute(conn)
     .await?;
 
-    Ok(token)
+    Ok(AuthUserInfo { id: user.id, token })
 }
 
 pub async fn logout_user(conn: &mut PgConnection, name: String) -> Result<bool> {

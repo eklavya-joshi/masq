@@ -24,10 +24,17 @@ use self::messages::messages_router;
 use self::users::{auth_users_router, noauth_users_router};
 use self::websocket::websocket_router;
 
+#[derive(Clone)]
+pub struct WsChannel {
+    pub sender: Arc<Sender<String>>,
+    pub user_1: Option<Uuid>,
+    pub user_2: Option<Uuid>
+}
+
 #[derive(Clone, FromRef)]
 pub struct AppState {
     pub pool: PgPool,
-    pub tx_map: Arc<RwLock<HashMap<Uuid, Sender<String>>>>
+    pub tx_map: Arc<RwLock<HashMap<Uuid, WsChannel>>>
 }
 
 pub async fn router(app_state: AppState) -> Router {

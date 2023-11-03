@@ -6,7 +6,7 @@ use axum_macros::debug_handler;
 use uuid::Uuid;
 
 use crate::{
-    api::user::{create_user, find_users, logout_user, verify_user},
+    api::user::{create_user, find_users, logout_user, verify_user, AuthUserInfo},
     routes::{error::{log, Result}, AppState},
 };
 
@@ -30,28 +30,28 @@ pub async fn find(
 pub async fn create(
     State(state): State<AppState>,
     Json(payload): Json<CreateUserPayload>,
-) -> Result<Json<AuthResponse>> {
+) -> Result<Json<AuthUserInfo>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/create");
 
     let conn = &mut state.pool.acquire().await?;
 
-    let token = create_user(conn, &payload.username, &payload.password).await?;
+    let auth_user_info = create_user(conn, &payload.username, &payload.password).await?;
 
-    log(Json(AuthResponse { token }), "/users/create")
+    log(Json(auth_user_info), "/users/create")
 }
 
 #[debug_handler]
 pub async fn login(
     State(state): State<AppState>,
     Json(payload): Json<LoginPayload>,
-) -> Result<Json<AuthResponse>> {
+) -> Result<Json<AuthUserInfo>> {
     println!("->> {:<18} - {}", "HANDLER", "/users/login");
 
     let conn = &mut state.pool.acquire().await?;
 
-    let token = verify_user(conn, &payload.username, &payload.password).await?;
+    let auth_user_info = verify_user(conn, &payload.username, &payload.password).await?;
 
-    log(Json(AuthResponse { token }), "/users/login")
+    log(Json(auth_user_info), "/users/login")
 }
 
 #[debug_handler]

@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use axum::{response::IntoResponse, extract::{State, ws::{WebSocket, WebSocketUpgrade, Message}, Path}, Extension};
 use futures::{sink::SinkExt, stream::StreamExt};
 use tokio::sync::broadcast::channel;
 use uuid::Uuid;
 
-use crate::routes::AppState;
+use crate::routes::{AppState, WsChannel};
 
 pub async fn websocket_handler(
     Extension(user): Extension<Uuid>,
@@ -25,17 +27,43 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: AppSta
     {
         if !state.tx_map.clone().read().await.contains_key(&inbox) {
             let (tx, _rx) = channel(100);
-            state.tx_map.clone().write().await.insert(inbox.clone(), tx);
+            let ws = WsChannel { sender: Arc::new(tx), user_1: None, user_2: None};
+            state.tx_map.clone().write().await.insert(inbox.clone(), ws);
         }
+
     }
 
-    let map = state.tx_map.clone();
-    let read_map = map.read().await;
-    let tx = read_map.get(&inbox).unwrap();
+    // Keeps track of the client connections to the socket, with only one connection per user id allowed
+    {
+
+        let map = state.tx_map.clone();
+        let mut write = map.write().await;
+        let ws = write.get(&inbox).unwrap();
+
+        if ws.user_1.is_none() {
+            let mut new_ws = write.remove(&inbox).unwrap();
+            new_ws.user_1 = Some(user);
+            write.insert(inbox, new_ws);
+        } else if ws.user_2.is_none() && ws.user_1.unwrap() != user {
+            let mut new_ws = write.remove(&inbox).unwrap();
+            new_ws.user_2 = Some(user);
+            write.insert(inbox, new_ws);
+        } else {
+            let msg = format!("user {} is already listening on another client.", user);
+            let _ = sender.send(Message::Text(msg)).await;
+            return;
+        }
+
+    }
+
+    let tx = state.tx_map.clone().read().await.get(&inbox).unwrap().sender.clone();
 
     let mut rx = tx.subscribe();
 
     let msg = format!("{} joined.", user.to_string());
+    let _ = tx.send(msg);
+
+    let msg = format!("{{\"current_users\": \"{}\"}}", tx.receiver_count());
     let _ = tx.send(msg);
 
     let mut send_task = tokio::spawn(async move {
@@ -62,6 +90,27 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: AppSta
 
     let msg = format!("{} left.", user);
     let _ = tx.send(msg);
+
+    let msg = format!("{{\"current_users\": \"{}\"}}", tx.receiver_count());
+    let _ = tx.send(msg);
+
+    {
+
+        let map = state.tx_map.clone();
+        let mut write = map.write().await;
+        let ws = write.get(&inbox).unwrap();
+
+        if ws.user_1.is_some_and(|u| u == user) {
+            let mut new_ws = write.remove(&inbox).unwrap();
+            new_ws.user_1 = None;
+            write.insert(inbox, new_ws);
+        } else if ws.user_2.is_some_and(|u| u == user) {
+            let mut new_ws = write.remove(&inbox).unwrap();
+            new_ws.user_2 = None;
+            write.insert(inbox, new_ws);
+        }
+        
+    }
 
     if tx.receiver_count() == 0 {
         state.tx_map.clone().write().await.remove(&inbox);
