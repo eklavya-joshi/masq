@@ -27,7 +27,11 @@ export default function LoginPage() {
         });
         console.log(response);
         if (response.ok) {
-            response.json().then((a) => Cookies.set("token", a.token));
+            response.json().then((a) => {
+                Cookies.set("token", a.token); 
+                Cookies.set("username", username);
+                Cookies.set("user_id", a.user_id);
+            });
             response.headers.getSetCookie();
             navigate("/dashboard");
         }

@@ -15,12 +15,10 @@ export default function useWebsocket(onMessage, inbox) {
     useEffect(() => {
         if (!ws.current) return;
         ws.current.onmessage = e => {
-            console.log(e);
-            onMessage()
+            onMessage(e)
         };
     }, []);
     const sendMessage = (msg) => {
-        console.log("asdf");
         if (!ws.current) return;
         ws.current.send(msg);
     }
