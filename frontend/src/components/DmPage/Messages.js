@@ -6,13 +6,18 @@ import Cookies from "js-cookie";
 
 export default function UserList({messages}) {
 
-    const user = Cookies.get('user');
+    const user = Cookies.get('user_id');
 
     const displayMessages = () => {
         return (
             messages.map(message => {
-                const align = message.author !== user ? 'flex flex-col place-items-left mx-3' : 'flex flex-col place-items-end mx-3';
-                const bubble = message.author !== user ? 'w-max bg-gray-500 rounded-full' : 'w-max bg-blue-800 rounded-full';
+                const align = message.author !== user ? 'flex flex-col place-items-left w-64 mx-3' : 'flex flex-col place-items-end w-64 mx-3';
+                let bubble = 'w-max bg-blue-800 rounded-full';
+                if (message.author === "Error") {
+                    bubble = 'w-max bg-red-800 rounded-full';
+                } else if (message.author !== user) {
+                    bubble = 'w-max bg-gray-500 rounded-full';
+                }
                 return (
                     <div className={align}>
                         <div className="text-gray-500 ml-1">

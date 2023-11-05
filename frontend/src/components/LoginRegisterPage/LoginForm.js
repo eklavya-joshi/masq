@@ -30,7 +30,7 @@ export default function LoginPage() {
             response.json().then((a) => {
                 Cookies.set("token", a.token); 
                 Cookies.set("username", username);
-                Cookies.set("user_id", a.user_id);
+                Cookies.set("user_id", a.id);
             });
             response.headers.getSetCookie();
             navigate("/dashboard");

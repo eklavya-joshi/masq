@@ -3,8 +3,9 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import Axios from "axios";
 import Cookies from "js-cookie";
+import { encryptMessage } from "../../aes";
 
-export default function SendMessage({websocket, messageSent, setMessageSent, otherUserOnline}) {
+export default function SendMessage({websocket, messageSent, setMessageSent, otherUserOnline, sharedSecret}) {
 
     const params = useParams();
 
@@ -15,8 +16,10 @@ export default function SendMessage({websocket, messageSent, setMessageSent, oth
         if (messageContent.length < 1) return;
         const created = new Date().toLocaleString('en-US', { hour: 'numeric', hour12: true, minute: 'numeric' });
         
-        const socketObj = { author: Cookies.get("user"), content: messageContent, created: created };
-        websocket(JSON.stringify(socketObj))
+        const socketObj = { author: Cookies.get("user_id"), content: messageContent, created: created };
+        console.log(sharedSecret);
+        const messageStr = encryptMessage(JSON.stringify(socketObj), sharedSecret);
+        websocket(messageStr)
 
         // const reqObj = { inbox: params.id, content: messageContent, created: new Date() };
         // const { data } = await Axios.post(

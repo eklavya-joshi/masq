@@ -1,10 +1,7 @@
 import React from "react";
 import Sidebar from "./Sidebar";
-import aes from "../../aes";
 
 export default function LandingPage() {
-
-  aes();
 
   return (
   <>
