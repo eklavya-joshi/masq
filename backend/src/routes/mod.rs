@@ -24,11 +24,17 @@ use self::messages::messages_router;
 use self::users::{auth_users_router, noauth_users_router};
 use self::websocket::websocket_router;
 
+#[derive(Clone, Debug)]
+pub struct ClientInfo {
+    pub id: Uuid,
+    pub key: String
+}
+
 #[derive(Clone)]
 pub struct WsChannel {
     pub sender: Arc<Sender<String>>,
-    pub user_1: Option<Uuid>,
-    pub user_2: Option<Uuid>
+    pub user_1: Option<ClientInfo>,
+    pub user_2: Option<ClientInfo>
 }
 
 #[derive(Clone, FromRef)]

@@ -5,7 +5,7 @@ use futures::{sink::SinkExt, stream::StreamExt};
 use tokio::sync::broadcast::channel;
 use uuid::Uuid;
 
-use crate::routes::{AppState, WsChannel};
+use crate::routes::{AppState, WsChannel, ClientInfo};
 
 pub async fn websocket_handler(
     Extension(user): Extension<Uuid>,
@@ -42,11 +42,11 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: AppSta
 
         if ws.user_1.is_none() {
             let mut new_ws = write.remove(&inbox).unwrap();
-            new_ws.user_1 = Some(user);
+            new_ws.user_1 = Some(ClientInfo { id: user, key: "".to_string()});
             write.insert(inbox, new_ws);
-        } else if ws.user_2.is_none() && ws.user_1.unwrap() != user {
+        } else if ws.user_2.is_none() && ws.user_1.as_ref().unwrap().id != user {
             let mut new_ws = write.remove(&inbox).unwrap();
-            new_ws.user_2 = Some(user);
+            new_ws.user_2 = Some(ClientInfo { id: user, key: "".to_string()});
             write.insert(inbox, new_ws);
         } else {
             let msg = format!("user {} is already listening on another client.", user);
@@ -76,10 +76,51 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: AppSta
 
     let tx_clone = tx.clone();
     let name = user.clone();
+    let map_clone = state.tx_map.clone();
 
     let mut recv_task = tokio::spawn(async move {
         while let Some(Ok(Message::Text(text))) = receiver.next().await {
-            let _ = tx_clone.send(format!("{}: {}", name, text));
+            println!("{text}");
+            if text.contains("\"key\":") {
+                let mut write = map_clone.write().await;
+                let ws = write.get_mut(&inbox).unwrap();
+
+                let split1: Vec<&str> = text.split("key\":\"").collect();
+                let split2: Vec<&str> = split1[1].split("\"").collect();
+                let key = split2[0];
+
+                let mut res = String::new();
+
+                match ws.user_1.as_ref().is_some_and(|u| u.id == name) {
+                    true => {
+                        let client = ws.user_1.as_mut().unwrap();
+                        client.key = key.to_string();
+
+                        let user_2_key = match &ws.user_2 {
+                            Some(u) => u.key.to_string(),
+                            None => "".to_string(),
+                        };
+
+                        res.push_str(&format!("{{\"pKeys\": {{\"a\": {:?}, \"b\": {:?}}}}}", client.key, user_2_key));
+                    },
+                    false => {
+                        let client = ws.user_2.as_mut().unwrap();
+                        client.key = key.to_string();
+
+                        let user_1_key = match &ws.user_1 {
+                            Some(u) => u.key.to_string(),
+                            None => "".to_string(),
+                        };
+
+                        res.push_str(&format!("{{\"pKeys\": {{\"a\": {:?}, \"b\": {:?}}}}}", user_1_key, client.key));
+                    }
+                };
+
+                let _ = tx_clone.send(res);
+
+            } else {
+                let _ = tx_clone.send(format!("{}: {}", name, text));
+            }
         }
     });
 
@@ -100,11 +141,11 @@ pub async fn websocket(user: Uuid, inbox: Uuid, stream: WebSocket, state: AppSta
         let mut write = map.write().await;
         let ws = write.get(&inbox).unwrap();
 
-        if ws.user_1.is_some_and(|u| u == user) {
+        if ws.user_1.as_ref().is_some_and(|u| u.id == user) {
             let mut new_ws = write.remove(&inbox).unwrap();
             new_ws.user_1 = None;
             write.insert(inbox, new_ws);
-        } else if ws.user_2.is_some_and(|u| u == user) {
+        } else if ws.user_2.as_ref().is_some_and(|u| u.id == user) {
             let mut new_ws = write.remove(&inbox).unwrap();
             new_ws.user_2 = None;
             write.insert(inbox, new_ws);
